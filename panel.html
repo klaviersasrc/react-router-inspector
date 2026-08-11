@@ -1,0 +1,70 @@
+<!doctype html>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="panel.css" />
+<div id="app">
+  <header id="toolbar">
+    <span class="brand">RR</span>
+    <button id="clear" title="Clear">Clear</button>
+    <label class="chk"><input type="checkbox" id="preserve" checked /> Preserve</label>
+    <label class="chk" title="Capture console logs (incl. SSR/hydration). Turn off for a pristine console + stack traces."><input type="checkbox" id="captureConsole" checked /> Logs</label>
+    <button id="setupBtn" title="How to capture server logs &amp; SSR calls">⚙ Server setup</button>
+    <span id="mode" class="badge" title="Detected data source">detecting…</span>
+    <input id="filter" type="search" placeholder="Filter by route or URL" />
+  </header>
+  <div id="split">
+    <ol id="list" aria-label="React Router data events"></ol>
+    <div id="resizer" title="Drag to resize" role="separator" aria-orientation="vertical"></div>
+    <section id="detail">
+      <nav id="tabs">
+        <button data-tab="loader" class="active">Loader Data</button>
+        <button data-tab="payload">Payload</button>
+        <button data-tab="headers">Headers</button>
+        <button data-tab="response">Response</button>
+        <button data-tab="raw">Raw</button>
+        <button data-tab="console">Console <span id="consoleCount" class="count"></span></button>
+      </nav>
+      <div id="panes">
+        <div class="pane active" data-pane="loader"></div>
+        <div class="pane" data-pane="payload"></div>
+        <div class="pane" data-pane="headers"></div>
+        <div class="pane" data-pane="response"></div>
+        <div class="pane" data-pane="raw"></div>
+        <div class="pane" data-pane="console"></div>
+      </div>
+    </section>
+  </div>
+
+  <div id="setup" hidden>
+    <div class="setup-card">
+      <header class="setup-head">
+        <strong>Capture server logs &amp; SSR calls</strong>
+        <button id="setupClose" title="Close">✕</button>
+      </header>
+      <div class="setup-body">
+        <p>The panel already shows everything browser-side. To also see your <b>server</b>
+          logs and <b>SSR</b> fetches, add this dev-only Vite plugin to your app — it
+          streams the server side into this panel. It only runs in dev.</p>
+        <ol>
+          <li>Save the plugin into your project (e.g. <code>tools/vite-plugin-rr-inspector.mjs</code>) — <b>Download</b> below, or <b>Copy</b> the code.</li>
+          <li>Add it to your <code>vite.config</code>, before <code>reactRouter()</code>:
+            <pre class="setup-snippet">import rrInspector from './tools/vite-plugin-rr-inspector.mjs';
+
+export default defineConfig({
+  plugins: [ rrInspector(), reactRouter() ],
+});</pre>
+          </li>
+          <li>Restart the dev server. Server logs (tagged <b>server</b>) and <b>ssr</b> rows appear automatically.</li>
+        </ol>
+        <div class="setup-actions">
+          <button id="pluginDownload" class="primary">⬇ Download plugin (.mjs)</button>
+          <button id="pluginCopy">Copy plugin code</button>
+          <span id="copyOk" class="copy-ok" hidden>copied ✓</span>
+        </div>
+        <pre id="pluginCode" class="setup-code">Loading plugin source…</pre>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="src/turbo-init.mjs"></script>
+<script src="src/json-tree.js"></script>
+<script src="src/panel.js"></script>

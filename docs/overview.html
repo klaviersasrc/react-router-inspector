@@ -1,0 +1,351 @@
+<title>React Router Inspector</title>
+<style>
+  :root {
+    --bg: #0d1513; --surface: #131c1a; --surface-2: #182220; --border: #26332f;
+    --text: #dae4e0; --dim: #8aa39d; --faint: #5f7570;
+    --accent: #4ec9b0; --accent-ink: #0d1513; --accent-soft: rgba(78,201,176,.13);
+    --router: #c586c0; --data: #4ec9b0; --gql: #e356a7; --api: #7cb96b; --ssr: #c586c0;
+    --str: #ce9178; --num: #b5cea8; --key: #9cdcfe; --bool: #569cd6; --err: #f48771; --warnc: #dcdcaa;
+    --sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    --maxw: 1080px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #eaf0ed; --surface: #ffffff; --surface-2: #f3f7f5; --border: #d5e0db;
+      --text: #14201d; --dim: #566b64; --faint: #8399921a;
+      --accent: #157a65; --accent-ink: #ffffff; --accent-soft: rgba(21,122,101,.10);
+      --router: #9333a8; --data: #157a65; --gql: #c02d86; --api: #4f8f3f; --ssr: #9333a8;
+      --str: #a3492b; --num: #2f7a2f; --key: #0451a5; --bool: #0b57d0; --err: #c33; --warnc: #9a7d17;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1513; --surface: #131c1a; --surface-2: #182220; --border: #26332f;
+    --text: #dae4e0; --dim: #8aa39d; --faint: #5f7570;
+    --accent: #4ec9b0; --accent-ink: #0d1513; --accent-soft: rgba(78,201,176,.13);
+    --router: #c586c0; --gql: #e356a7; --api: #7cb96b; --ssr: #c586c0;
+    --str: #ce9178; --num: #b5cea8; --key: #9cdcfe; --bool: #569cd6; --err: #f48771; --warnc: #dcdcaa;
+  }
+  :root[data-theme="light"] {
+    --bg: #eaf0ed; --surface: #ffffff; --surface-2: #f3f7f5; --border: #d5e0db;
+    --text: #14201d; --dim: #566b64;
+    --accent: #157a65; --accent-ink: #ffffff; --accent-soft: rgba(21,122,101,.10);
+    --router: #9333a8; --gql: #c02d86; --api: #4f8f3f; --ssr: #9333a8;
+    --str: #a3492b; --num: #2f7a2f; --key: #0451a5; --bool: #0b57d0; --err: #c33; --warnc: #9a7d17;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans);
+    line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+  a { color: var(--accent); }
+  h1, h2, h3 { text-wrap: balance; margin: 0; letter-spacing: -.02em; }
+  .eyebrow { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 14px; }
+  .lead { color: var(--dim); font-size: 1.14rem; max-width: 60ch; }
+
+  /* ---- top bar ---- */
+  header { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent); border-bottom: 1px solid var(--border); }
+  .bar { display: flex; align-items: center; gap: 12px; height: 56px; }
+  .logo { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; letter-spacing: -.01em; }
+  .rr { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px;
+    background: var(--accent); color: var(--accent-ink); font-family: var(--mono); font-weight: 800; font-size: 12px; }
+  .bar .spacer { flex: 1; }
+  .ghost { font-family: var(--mono); font-size: .82rem; color: var(--dim); text-decoration: none; }
+  .btn { font-family: var(--mono); font-size: .82rem; font-weight: 600; text-decoration: none;
+    padding: 7px 14px; border-radius: 8px; background: var(--accent); color: var(--accent-ink);
+    border: 1px solid transparent; white-space: nowrap; }
+  .btn.secondary { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn:focus-visible, .ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- hero ---- */
+  .hero { padding: 76px 0 40px; }
+  .hero h1 { font-size: clamp(2.3rem, 5.5vw, 3.5rem); line-height: 1.04; font-weight: 800; }
+  .hero h1 .lit { color: var(--accent); }
+  .hero .lead { margin: 22px 0 28px; font-size: 1.22rem; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .cta .note { font-family: var(--mono); font-size: .76rem; color: var(--faint); }
+
+  /* ---- recreated panel ---- */
+  .panel { margin-top: 44px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    background: var(--surface); box-shadow: 0 24px 60px -30px rgba(0,0,0,.55); font-family: var(--mono); font-size: 12.5px; }
+  .chrome { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--surface-2);
+    border-bottom: 1px solid var(--border); color: var(--dim); }
+  .dots { display: flex; gap: 6px; margin-right: 6px; }
+  .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .tabs { display: flex; gap: 2px; overflow: hidden; }
+  .tabs span { padding: 3px 9px; border-radius: 6px 6px 0 0; color: var(--faint); }
+  .tabs span.on { color: var(--text); border-bottom: 2px solid var(--accent); }
+  .split { display: grid; grid-template-columns: 1.05fr 1.25fr; min-height: 320px; }
+  .list { border-right: 1px solid var(--border); }
+  .row { display: flex; align-items: center; gap: 9px; padding: 7px 12px; border-bottom: 1px solid var(--border); }
+  .row.sel { background: var(--accent-soft); }
+  .tag { font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  .t-router { background: var(--router); } .t-data { background: var(--data); }
+  .t-gql { background: var(--gql); } .t-api { background: var(--api); } .t-ssr { background: var(--ssr); }
+  .m { color: var(--key); font-weight: 700; }
+  .rt { color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .st { color: var(--dim); }
+  .row.bad .rt { color: var(--err); }
+  .detail { padding: 12px 14px; overflow: hidden; }
+  .dtabs { display: flex; gap: 14px; margin-bottom: 12px; color: var(--faint); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .dtabs b { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-bottom: -9px; }
+  .tree { white-space: pre-wrap; line-height: 1.7; }
+  .k { color: var(--key); } .s { color: var(--str); } .n { color: var(--num); } .b { color: var(--bool); }
+  .nul { color: var(--faint); } .tw { color: var(--faint); }
+  .reveal { opacity: 0; transform: translateY(6px); animation: rise .5s ease forwards; }
+
+  /* ---- sections ---- */
+  section { padding: 62px 0; border-top: 1px solid var(--border); }
+  section h2 { font-size: clamp(1.6rem, 3.2vw, 2.1rem); font-weight: 800; }
+  section > .wrap > .lead { margin-top: 14px; }
+
+  .why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 38px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+  .card .num { font-family: var(--mono); font-size: .74rem; color: var(--accent); letter-spacing: .1em; }
+  .card h3 { font-size: 1.08rem; margin: 12px 0 8px; }
+  .card p { color: var(--dim); font-size: .95rem; margin: 0; }
+  .card .was { display: inline-block; margin-top: 14px; font-family: var(--mono); font-size: .74rem;
+    color: var(--err); background: color-mix(in srgb, var(--err) 12%, transparent); padding: 3px 8px; border-radius: 6px; }
+
+  .feat { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; align-items: center; margin-top: 34px; }
+  .feat + .feat { margin-top: 22px; }
+  .feat.flip .txt { order: 2; }
+  .feat h3 { font-size: 1.35rem; }
+  .feat p { color: var(--dim); margin: 10px 0 0; }
+  .chip-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+  .chip-tags .tag { font-family: var(--mono); }
+  .mini { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface);
+    font-family: var(--mono); font-size: 12px; }
+  .mini .h { padding: 7px 11px; background: var(--surface-2); border-bottom: 1px solid var(--border); color: var(--dim); display: flex; gap: 8px; }
+  .mini .bd { padding: 11px 12px; white-space: pre-wrap; line-height: 1.7; }
+  .filters { display: flex; gap: 5px; flex-wrap: wrap; padding: 9px 11px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  .fchip { font-family: var(--mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    padding: 1px 6px; border-radius: 9px; border: 1px solid var(--border); color: var(--text); }
+  .fchip.off { opacity: .38; text-decoration: line-through; }
+  .logline { padding: 5px 11px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: baseline; }
+  .src { font-size: 8px; font-weight: 800; background: var(--api); color: var(--bg); padding: 0 4px; border-radius: 4px; text-transform: uppercase; }
+  .lvl { color: var(--faint); font-size: 9px; min-width: 34px; text-transform: uppercase; font-weight: 700; }
+  .lvl.e { color: var(--err); } .lvl.w { color: var(--warnc); } .lvl.i { color: var(--bool); }
+  .loc { color: var(--faint); }
+
+  /* ---- how ---- */
+  .how { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-top: 36px; }
+  .how .card h3 { display: flex; align-items: center; gap: 8px; }
+  .how .pin { width: 9px; height: 9px; border-radius: 50%; }
+  .flow { font-family: var(--mono); font-size: .82rem; color: var(--dim); margin-top: 30px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; overflow-x: auto; }
+  .flow b { color: var(--accent); }
+
+  /* ---- steps ---- */
+  .steps { counter-reset: s; margin-top: 34px; display: grid; gap: 14px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 16px; align-items: start;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .step::before { counter-increment: s; content: counter(s); font-family: var(--mono); font-weight: 800;
+    display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+    background: var(--accent-soft); color: var(--accent); font-size: .9rem; }
+  .step h3 { font-size: 1.05rem; } .step p { color: var(--dim); margin: 5px 0 0; font-size: .95rem; }
+  .step code { font-family: var(--mono); font-size: .85em; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--border); }
+
+  footer { border-top: 1px solid var(--border); padding: 34px 0 60px; color: var(--dim); font-size: .9rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+
+  @media (max-width: 820px) {
+    .split { grid-template-columns: 1fr; } .detail { display: none; }
+    .why, .how { grid-template-columns: 1fr; }
+    .feat, .feat.flip .txt { grid-template-columns: 1fr; order: 0; }
+    .bar .hide { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .reveal { animation: none; opacity: 1; transform: none; } }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+</style>
+
+<header>
+  <div class="wrap bar">
+    <span class="logo"><span class="rr">RR</span> React Router Inspector</span>
+    <span class="spacer"></span>
+    <a class="ghost hide" href="#why">Why</a>
+    <a class="ghost hide" href="#features">Features</a>
+    <a class="ghost hide" href="#how">How it works</a>
+    <a class="btn" href="#install">Install</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="border-top:none">
+    <div class="wrap">
+      <p class="eyebrow">Chrome DevTools · React Router v7</p>
+      <h1>See the data your app<br>is <span class="lit">actually</span> moving.</h1>
+      <p class="lead">React Router hides your data in plain sight: loader payloads come back
+        encoded, and the API calls that fetch them run on the <em>server</em> during SSR — invisible
+        to the Network tab. This puts all of it in one DevTools panel, decoded.</p>
+      <div class="cta">
+        <a class="btn" href="#install">Add to Chrome</a>
+        <a class="btn secondary" href="#features">See what it shows</a>
+        <span class="note">MV3 · local-only · no data leaves your machine</span>
+      </div>
+
+      <!-- The product, demonstrating itself -->
+      <div class="panel" role="img" aria-label="The React Router Inspector panel showing decoded router data and server-side calls">
+        <div class="chrome">
+          <span class="dots"><i></i><i></i><i></i></span>
+          <span class="tabs"><span>Elements</span><span>Console</span><span>Network</span><span class="on">React Router</span></span>
+        </div>
+        <div class="split">
+          <div class="list">
+            <div class="row sel"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
+            <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
+            <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
+            <div class="row reveal" style="animation-delay:.15s"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
+            <div class="row reveal bad" style="animation-delay:.3s"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+          </div>
+          <div class="detail">
+            <div class="dtabs"><b>Loader Data</b><span>Payload</span><span>Headers</span><span>Response</span><span>Console</span></div>
+<div class="tree"><span class="tw">▾</span> { root, routes/products }
+  <span class="tw">▾</span> <span class="k">root</span>: { data }
+      <span class="k">user</span>: { <span class="k">name</span>: <span class="s">"demo.user"</span>, <span class="k">roles</span>: [<span class="s">"editor"</span>] }
+  <span class="tw">▾</span> <span class="k">"routes/products"</span>: { data }
+      <span class="k">category</span>: <span class="s">"widgets"</span>
+      <span class="k">fetchedAt</span>: <span class="s">Date(2030-01-15T12:00:00Z)</span>
+      <span class="k">totals</span>: <span class="s">Map(2)</span> { today → <span class="n">41250.5</span> }
+      <span class="k">catalogId</span>: <span class="n">90071992547409910n</span>
+      <span class="k">inStockOnly</span>: <span class="b">true</span>
+      <span class="k">note</span>: <span class="nul">undefined</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="wrap">
+      <p class="eyebrow">Why you need it</p>
+      <h2>Three blind spots, gone.</h2>
+      <p class="lead">React Router v7 framework mode is fast because it's clever about data — and
+        that cleverness is exactly what makes it hard to debug with the tools you have.</p>
+      <div class="why">
+        <div class="card">
+          <span class="num">01</span>
+          <h3>Encoded loader data</h3>
+          <p>Single-fetch responses are turbo-stream, not JSON — so the Network tab shows you an
+            unreadable blob. The Inspector decodes it, keeping real types: Dates, Maps, BigInts, undefined.</p>
+          <span class="was">before: "Unable to decode response"</span>
+        </div>
+        <div class="card">
+          <span class="num">02</span>
+          <h3>Server-side API calls</h3>
+          <p>Your loaders fetch on the server during SSR. The browser never sends those requests, so no
+            browser tool can show them. The Inspector surfaces each one — URL, headers, body, timing.</p>
+          <span class="was">before: invisible to DevTools</span>
+        </div>
+        <div class="card">
+          <span class="num">03</span>
+          <h3>Server logs in a far-off terminal</h3>
+          <p>Loader logs and SSR errors print to the Node process, not the browser console. The Inspector
+            streams them into the same panel — grouped, filterable, next to the browser logs.</p>
+          <span class="was">before: alt-tab to the terminal</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <p class="eyebrow">One panel, everything</p>
+      <h2>Read it like the Network tab —<br>because it works like the Network tab.</h2>
+
+      <div class="feat">
+        <div class="txt">
+          <h3>Every call as a row</h3>
+          <p>Router snapshots, <code>.data</code> requests, GraphQL operations, REST calls, and the
+            server-side SSR fetches — each tagged, each with Payload, Headers, Response and Raw tabs.
+            Errors highlight in red; timings show inline.</p>
+          <div class="chip-tags">
+            <span class="tag t-router">router</span><span class="tag t-data">data</span>
+            <span class="tag t-gql">gql</span><span class="tag t-api">api</span><span class="tag t-ssr">ssr</span>
+          </div>
+        </div>
+        <div class="mini">
+          <div class="h">Headers · /catalog/summary</div>
+          <div class="bd"><span class="tw">▾</span> { request, response }
+  <span class="tw">▾</span> <span class="k">request</span>
+      <span class="k">content-type</span>: <span class="s">"application/json"</span>
+      <span class="k">x-request-id</span>: <span class="s">"req_8f21ac"</span>
+      <span class="k">authorization</span>: <span class="s">"Bearer demo.jwt…"</span>
+  <span class="tw">▾</span> <span class="k">response</span>
+      <span class="k">content-type</span>: <span class="s">"application/json"</span>
+      <span class="k">cache-control</span>: <span class="s">"no-store"</span></div>
+        </div>
+      </div>
+
+      <div class="feat flip">
+        <div class="txt">
+          <h3>A console that finally makes sense</h3>
+          <p>Browser and server logs together. A logged object is one collapsible entry — not fifteen
+            fragmented lines. Filter by source and level with one click. Toggle capture off for pristine
+            stack traces whenever you want.</p>
+        </div>
+        <div class="mini">
+          <div class="filters">
+            <span class="fchip">server 4</span><span class="fchip">browser 2</span>
+            <span class="fchip off">error 1</span><span class="fchip">warn 1</span><span class="fchip">info 2</span><span class="fchip">debug 1</span>
+          </div>
+          <div class="logline"><span class="src">server</span><span class="lvl">log</span><span class="loc">/shop/products</span> <span>[products.loader] fetching catalog</span></div>
+          <div class="logline"><span class="src">server</span><span class="lvl i">info</span><span class="loc">/shop/products</span> <span>resolved in 231ms</span></div>
+          <div class="logline"><span class="lvl w">warn</span><span class="loc">/shop/products</span> <span>price pending at first paint</span></div>
+          <div class="logline"><span class="src">server</span><span class="lvl e">error</span><span class="loc">/shop/products</span> <span>[inventory] upstream timeout</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <p class="eyebrow">How it works</p>
+      <h2>Reads what's real — never reconstructs it.</h2>
+      <p class="lead">Other React Router devtools inject an overlay into your app and rebuild a fake
+        network view. This is a real DevTools panel reading real records, from three sources.</p>
+      <div class="how">
+        <div class="card">
+          <h3><span class="pin" style="background:var(--router)"></span> Live router bridge</h3>
+          <p>Subscribes to the running data router and reads loader/action state directly — already
+            decoded, real JS objects. No parsing, no guesswork.</p>
+        </div>
+        <div class="card">
+          <h3><span class="pin" style="background:var(--data)"></span> Network decode</h3>
+          <p>Captures the browser's <code>.data</code> and API traffic from the DevTools network feed and
+            decodes turbo-stream with the same library React Router uses.</p>
+        </div>
+        <div class="card">
+          <h3><span class="pin" style="background:var(--ssr)"></span> Server bridge</h3>
+          <p>A tiny dev-only Vite plugin streams server stdout and intercepts server-side <code>fetch</code>,
+            surfacing the SSR side the browser physically can't see.</p>
+        </div>
+      </div>
+      <div class="flow">page &nbsp;→&nbsp; <b>injected bridge</b> (reads router · patches fetch/console) &nbsp;→&nbsp; content script &nbsp;→&nbsp; background &nbsp;→&nbsp; <b>DevTools panel</b> &nbsp;&nbsp;·&nbsp;&nbsp; dev server &nbsp;→&nbsp; <b>Vite plugin</b> (SSE) &nbsp;→&nbsp; panel</div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <p class="eyebrow">Quick start</p>
+      <h2>Two minutes to first insight.</h2>
+      <div class="steps">
+        <div class="step"><div><h3>Load the extension</h3><p>Unzip it, open <code>chrome://extensions</code>, turn on Developer mode, and <b>Load unpacked</b>.</p></div></div>
+        <div class="step"><div><h3>Open the panel</h3><p>On any React Router app, open DevTools and pick the <b>React Router</b> tab. Reopen DevTools if it isn't listed yet.</p></div></div>
+        <div class="step"><div><h3>Add the Vite plugin (optional)</h3><p>Get it from the panel's <b>⚙ Server setup</b> — Download or Copy — then add <code>rrInspector()</code> to your dev <code>vite.config</code>. The <b>server</b> logs and <b>ssr</b> calls light up.</p></div></div>
+        <div class="step"><div><h3>Navigate, and watch</h3><p>Change a filter, submit a form — every load, call, and log streams in, decoded and organized.</p></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="logo"><span class="rr">RR</span> React Router Inspector</span>
+    <span class="spacer" style="flex:1"></span>
+    <span>Local-only · no data collected · no remote code</span>
+  </div>
+</footer>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>RR Inspector — demo</title>
+<link rel="stylesheet" href="../panel.css" />
+<style> html,body{height:100%} </style>
+</head>
+<body>
+<div id="app">
+  <header id="toolbar">
+    <span class="brand">RR</span>
+    <button id="clear">Clear</button>
+    <label class="chk"><input type="checkbox" checked /> Preserve</label>
+    <span id="mode" class="badge bridge">live router bridge</span>
+    <input id="filter" type="search" placeholder="Filter by route or URL" />
+  </header>
+  <div id="split">
+    <ol id="list"></ol>
+    <div id="resizer" title="Drag to resize" role="separator"></div>
+    <section id="detail">
+      <nav id="tabs">
+        <button data-tab="loader" class="active">Loader Data</button>
+        <button data-tab="payload">Payload</button>
+        <button data-tab="headers">Headers</button>
+        <button data-tab="response">Response</button>
+        <button data-tab="raw">Raw</button>
+        <button data-tab="console">Console <span id="consoleCount" class="count"></span></button>
+      </nav>
+      <div id="panes">
+        <div class="pane active" data-pane="loader"></div>
+        <div class="pane" data-pane="payload"></div>
+        <div class="pane" data-pane="headers"></div>
+        <div class="pane" data-pane="response"></div>
+        <div class="pane" data-pane="raw"></div>
+        <div class="pane" data-pane="console"></div>
+      </div>
+    </section>
+  </div>
+</div>
+<script src="../src/json-tree.js"></script>
+<script type="module">
+import { encode, decode } from "../src/vendor/turbo-stream.mjs";
+
+// Generic example app: a demo storefront. (No real/work data.)
+const serverValue = {
+  root: { data: { user: { name: "demo.user", roles: ["editor"], tz: "UTC" } } },
+  "routes/products": { data: {
+    page: 0, inStockOnly: true, sortBy: "popularity", category: "widgets",
+    fetchedAt: new Date("2030-01-15T12:00:00.000Z"),
+    totals: new Map([["today", 41250.5], ["month", 183900]]),
+    catalogId: 90071992547409910n, note: undefined,
+    rows: [
+      { id: 1, name: "Blue Widget", price: 12500, status: "in_stock" },
+      { id: 2, name: "Red Gadget", price: 28750.5, status: "backorder" },
+    ],
+  }},
+};
+
+function streamToString(stream){const r=stream.getReader();const d=new TextDecoder();let o="";return (async()=>{for(;;){const{done,value}=await r.read();if(done)break;o+=typeof value==="string"?value:d.decode(value,{stream:true});}return o+d.decode();})();}
+async function decodeTurboStream(text){const{value,done}=await decode(new Response(text).body);await done;return value;}
+
+const wireText = await streamToString(encode(serverValue));
+const decoded = await decodeTurboStream(wireText);
+
+const H_REQ = { "content-type":"application/json", "x-request-id":"req_8f21ac", "authorization":"Bearer demo.jwt.token…" };
+const H_RES = { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "x-request-id":"req_8f21ac" };
+
+// Representative events across all capture kinds, on a generic demo storefront.
+const events = [
+  { kind:"router", method:"GET", route:"/shop/products  ·  initial load", status:200, source:"bridge",
+    loader: decoded, payload:{ query:{ category:"widgets", sortBy:"popularity" }, body:null },
+    decoded, raw:"(live router state — window.__reactRouterDataRouter.state)" },
+  { kind:"data", method:"GET", route:"/shop/products.data  ·  root,routes/products", status:200, source:"network",
+    loader: decoded, payload:{ query:{ category:"widgets" }, body:null }, decoded, raw:wireText,
+    reqHeaders:H_REQ, resHeaders:H_RES },
+  { kind:"graphql", method:"POST", route:"GraphQL · ProductList", status:200, source:"network",
+    payload:{ query:null, body:{ operationName:"ProductList", variables:{ category:"widgets", inStockOnly:true }, query:"query ProductList($category:String!,$inStockOnly:Boolean!){ products(category:$category, inStockOnly:$inStockOnly){ name price } }" } },
+    decoded:{ data:{ products:[ {name:"Blue Widget",price:125}, {name:"Red Gadget",price:287.5} ] } },
+    raw:'{"data":{"products":[{"name":"Blue Widget","price":125},{"name":"Red Gadget","price":287.5}]}}',
+    reqHeaders:H_REQ, resHeaders:H_RES },
+  { kind:"ssr", method:"GET", route:"/catalog/summary  ·  214ms", status:200, source:"server",
+    url:"https://api.example.com/catalog/summary?category=widgets",
+    payload:{ query:{ category:"widgets" }, body:null },
+    decoded:{ asOf:"2030-01-15", total:214, inStock:180, backorder:34 },
+    raw:'{"asOf":"2030-01-15","total":214,"inStock":180,"backorder":34}',
+    reqHeaders:H_REQ, resHeaders:H_RES },
+  { kind:"ssr", method:"GET", route:"/catalog/inventory  ·  timeout", status:500, source:"server", error:true,
+    url:"https://api.example.com/catalog/inventory?category=widgets",
+    payload:{ query:{ category:"widgets" }, body:null },
+    decoded:{ error:"Upstream timeout", code:"ETIMEDOUT" }, raw:'{"error":"Upstream timeout","code":"ETIMEDOUT"}',
+    reqHeaders:H_REQ, resHeaders:H_RES },
+];
+
+// Simulated console stream — incl. an SSR/loader log surfaced during hydration.
+const consoleLogs=[
+  { source:"server", level:"log", location:"/shop/products", text:"[products.loader] fetching catalog", args:[{url:"https://api.example.com/catalog/summary?category=widgets", ms:214}] },
+  { source:"server", level:"info", location:"/shop/products", text:"[loader] products.loader resolved in 231ms", args:[] },
+  { level:"info", location:"/shop/products", text:"[cart] hydrated 3 items", args:[] },
+  { level:"warn", location:"/shop/products", text:"[products] price still pending at first paint", args:[] },
+  { source:"server", level:"error", location:"/shop/products", text:"[inventory] upstream timeout", args:[{code:"ETIMEDOUT", endpoint:"/catalog/inventory"}] },
+  { source:"server", level:"debug", location:"/shop/products", text:"2030-01-15 12:00:13,662 DEBUG [products.loader] request {\n  method: 'GET',\n  url: 'https://api.example.com/catalog/summary?category=widgets',\n  headers: { accept: 'application/json', 'x-request-id': 'req_8f21ac' }\n}" },
+];
+
+const listEl=document.getElementById("list");
+const panes={loader:document.querySelector('[data-pane="loader"]'),payload:document.querySelector('[data-pane="payload"]'),headers:document.querySelector('[data-pane="headers"]'),response:document.querySelector('[data-pane="response"]'),raw:document.querySelector('[data-pane="raw"]'),console:document.querySelector('[data-pane="console"]')};
+document.getElementById("consoleCount").textContent=consoleLogs.length;
+const hiddenSources=new Set(),hiddenLevels=new Set();
+const LEVEL_ORDER=["error","warn","info","debug","log","trace"];
+function chip(label,key,hiddenSet,count){const b=document.createElement("button");b.className="chip"+(hiddenSet.has(key)?" off":"");b.textContent=count!=null?`${label} ${count}`:label;b.addEventListener("click",()=>{hiddenSet.has(key)?hiddenSet.delete(key):hiddenSet.add(key);renderConsole();});return b;}
+function renderConsole(){const pane=panes.console;pane.textContent="";
+const srcCounts={},lvlCounts={};for(const l of consoleLogs){const s=l.source||"browser";srcCounts[s]=(srcCounts[s]||0)+1;lvlCounts[l.level]=(lvlCounts[l.level]||0)+1;}
+const sources=Object.keys(srcCounts);const bar=document.createElement("div");bar.className="log-filters";if(sources.length>1){for(const s of sources)bar.appendChild(chip(s,s,hiddenSources,srcCounts[s]));const sep=document.createElement("span");sep.className="log-filters-sep";bar.appendChild(sep);}for(const lv of LEVEL_ORDER){if(lvlCounts[lv])bar.appendChild(chip(lv,lv,hiddenLevels,lvlCounts[lv]));}pane.appendChild(bar);
+for(const l of consoleLogs.filter(l=>!hiddenSources.has(l.source||"browser")&&!hiddenLevels.has(l.level))){const row=document.createElement("div");row.className="log log-"+l.level+(l.source==="server"?" log-server":"");if(l.source==="server"){const src=document.createElement("span");src.className="log-src";src.textContent="server";row.appendChild(src);}const lvl=document.createElement("span");lvl.className="log-lvl";lvl.textContent=l.level;const loc=document.createElement("span");loc.className="log-loc";loc.textContent=(l.location||"").split("?")[0];const msg=document.createElement("span");msg.className="log-msg";const text=l.text||"";const nl=text.indexOf("\n");if(nl>=0){const tw=document.createElement("span");tw.className="tw log-tw";tw.textContent="▸";msg.textContent=text.slice(0,nl);msg.style.cursor="pointer";const body=document.createElement("pre");body.className="log-body";body.textContent=text.slice(nl+1);body.style.display="none";const toggle=()=>{const open=body.style.display==="none";body.style.display=open?"block":"none";tw.textContent=open?"▾":"▸";};tw.addEventListener("click",toggle);msg.addEventListener("click",toggle);row.append(lvl,loc,tw,msg,body);}else{msg.textContent=text;row.append(lvl,loc,msg);}const objs=(l.args||[]).filter(a=>a&&typeof a==="object");if(objs.length){const t=window.renderJsonTree(objs.length===1?objs[0]:objs);t.classList.add("log-tree");row.appendChild(t);}pane.appendChild(row);}}
+let sel=0;
+function jsonInto(p,v,msg){p.textContent="";if(v==null){const e=document.createElement("div");e.className="empty";e.textContent=msg;p.appendChild(e);return;}p.appendChild(window.renderJsonTree(v));}
+function detail(ev){const isApi=ev.kind==="api"||ev.kind==="graphql"||ev.kind==="ssr";jsonInto(panes.loader,isApi?null:ev.loader,isApi?"API call — no loader data. See Response.":"No loader data");const pl={};if(ev.url)pl.url=ev.url;if(ev.method)pl.method=ev.method;if(ev.payload&&ev.payload.query)pl.query=ev.payload.query;if(ev.payload&&ev.payload.body!=null)pl.body=ev.payload.body;jsonInto(panes.payload,Object.keys(pl).length?pl:null,"No payload");jsonInto(panes.headers,(ev.reqHeaders||ev.resHeaders)?{request:ev.reqHeaders,response:ev.resHeaders}:null,"No headers (router event).");jsonInto(panes.response,ev.decoded,"—");panes.raw.textContent="";const pre=document.createElement("pre");pre.className="jt";pre.textContent=ev.raw;panes.raw.appendChild(pre);}
+function list(){listEl.textContent="";events.forEach((ev,i)=>{const li=document.createElement("li");if(i===sel)li.classList.add("sel");if(ev.error)li.classList.add("err");const tag=document.createElement("span");tag.className="tag tag-"+ev.kind;tag.textContent=ev.kind==="graphql"?"gql":ev.kind;const m=document.createElement("span");m.className="method "+(ev.method==="GET"?"get":"post");m.textContent=ev.method;const r=document.createElement("span");r.className="route";r.textContent=ev.route;const meta=document.createElement("span");meta.className="meta";meta.textContent=ev.status+(ev.source==="bridge"?" ·bridge":"");li.append(tag,m,r,meta);li.onclick=()=>{sel=i;list();detail(events[i]);};listEl.appendChild(li);});}
+document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",p.dataset.pane===b.dataset.tab));if(b.dataset.tab==="console")renderConsole();});
+list();detail(events[0]);
+// resizer (mirror of panel.js initResizer)
+(function(){const split=document.getElementById("split"),resizer=document.getElementById("resizer");let d=false;resizer.addEventListener("mousedown",e=>{d=true;resizer.classList.add("dragging");document.body.classList.add("col-resizing");e.preventDefault();});window.addEventListener("mousemove",e=>{if(!d)return;const r=split.getBoundingClientRect();const w=Math.max(120,Math.min(e.clientX-r.left,r.width-200));listEl.style.flex=`0 0 ${w}px`;});window.addEventListener("mouseup",()=>{if(!d)return;d=false;resizer.classList.remove("dragging");document.body.classList.remove("col-resizing");});resizer.addEventListener("dblclick",()=>{listEl.style.flex="0 0 42%";});})();
+window.__ready=true;
+</script>
+</body>
+</html>

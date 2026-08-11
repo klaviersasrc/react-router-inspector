@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# node / build artifacts (extension loads unpacked; no build step)
+node_modules/
+*.tgz
+package/
+
+# scratch
+scratchpad/
+*.log
+
+# packaged extension builds
+dist/
+
+# release mirror config (private)
+.release.env
