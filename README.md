@@ -1,5 +1,9 @@
 # React Router Inspector
 
+[![Latest release](https://img.shields.io/badge/release-v1.0.0-4ec9b0?style=flat-square)](https://github.com/klaviersasrc/react-router-inspector/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](LICENSE)
+[![Chrome](https://img.shields.io/badge/Chrome-MV3%20DevTools-6b7280?style=flat-square)](manifest.json)
+
 A Chrome DevTools extension that shows React Router's data flow the way the Network
 tab shows request payload + response body: **per route, decoded, readable**. Built to
 replace the in-app `react-router-devtools` panel for inspection work.
