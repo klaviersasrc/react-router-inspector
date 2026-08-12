@@ -16,7 +16,10 @@
 // - Base-path aware / gateway-safe; preserves your terminal output.
 //
 // Usage (dev only) in vite.config.ts:  plugins: [ rrInspector(), reactRouter() ]
-// Options: { maxLine?: number, dropViteClientEcho?: boolean, bufferMax?: number }
+// Options: { maxLine?, maxBody?, dropViteClientEcho?, bufferMax? }
+//   maxLine  cap per console line (default 8000)
+//   maxBody  cap per request/response body (default 2_000_000 ≈ 2 MB) — set higher
+//            or Infinity to never truncate large responses
 
 const SUFFIX = "__rr-inspector/logs";
 const ANSI = new RegExp(String.fromCodePoint(27) + String.raw`\[[0-9;]*[A-Za-z]`, "g"); // strip ANSI colours
@@ -67,6 +70,7 @@ function errText(err) {
 
 export default function rrInspectorServerLogs(options = {}) {
   const maxLine = options.maxLine ?? 8000;
+  const maxBody = options.maxBody ?? 2_000_000; // request/response body cap (≈2MB); Infinity to disable
   const dropViteClientEcho = options.dropViteClientEcho ?? true; // skip browser logs Vite forwards to the terminal
   const bufferMax = options.bufferMax ?? 300; // replayed to a panel when it connects
   const clients = new Set();
@@ -139,13 +143,13 @@ export default function rrInspectorServerLogs(options = {}) {
       let reqBody = null;
       try {
         const b = init?.body;
-        if (typeof b === "string") reqBody = truncate(b, 8000);
+        if (typeof b === "string") reqBody = truncate(b, maxBody);
       } catch { /* best-effort */ }
       try {
         const res = await orig.apply(this, args);
         try {
           let resBody = null;
-          try { resBody = truncate(await res.clone().text(), 20000); } catch { /* body unreadable */ }
+          try { resBody = truncate(await res.clone().text(), maxBody); } catch { /* body unreadable */ }
           broadcast({
             type: "net", source: "server", method, url: res.url || url,
             status: res.status, ok: res.ok,

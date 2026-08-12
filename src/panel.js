@@ -143,9 +143,8 @@
   }
 
   // ---- Ingest from page bridge (optional, richest data) ----------------------
-  const port = chrome.runtime.connect({ name: "rr-panel" });
-  port.postMessage({ type: "init", tabId: chrome.devtools.inspectedWindow.tabId });
-  port.onMessage.addListener(async (msg) => {
+  let port = null;
+  const onPortMessage = async (msg) => {
     if (msg.type === "bridge-hello") {
       sawBridge = true;
       setMode("bridge");
@@ -262,7 +261,19 @@
       if (selected === ev.id) renderDetail(ev);
       return;
     }
-  });
+  };
+
+  // Keep a live connection to the (MV3, ephemeral) service worker: reconnect if it
+  // gets recycled, and ping it so it isn't killed after ~30s idle — which would
+  // otherwise silently stop the page→panel relay after working for a while.
+  function connectPort() {
+    port = chrome.runtime.connect({ name: "rr-panel" });
+    port.postMessage({ type: "init", tabId: chrome.devtools.inspectedWindow.tabId });
+    port.onMessage.addListener(onPortMessage);
+    port.onDisconnect.addListener(() => { port = null; setTimeout(connectPort, 500); });
+  }
+  connectPort();
+  setInterval(() => { try { if (port) port.postMessage({ type: "keepalive" }); } catch {} }, 20000);
 
   function pickResponse(msg) {
     // The "response" of a data request is the loader data (+ action data / errors).
@@ -339,6 +350,15 @@
       e.className = "empty";
       e.textContent = emptyMsg;
       pane.appendChild(e);
+      return;
+    }
+    // A raw string (non-JSON or truncated body) — show it as plain wrapped text,
+    // not through the tree (which would JSON-escape every quote into a \" mess).
+    if (typeof value === "string") {
+      const pre = document.createElement("pre");
+      pre.className = "jt";
+      pre.textContent = value;
+      pane.appendChild(pre);
       return;
     }
     pane.appendChild(window.renderJsonTree(value));
@@ -528,7 +548,7 @@
   captureConsoleEl.addEventListener("change", () => {
     const on = captureConsoleEl.checked;
     try { localStorage.setItem("rrInspector.captureConsole.ui", on ? "1" : "0"); } catch {}
-    port.postMessage({ type: "to-page", payload: { action: "setConsoleCapture", on } });
+    if (port) port.postMessage({ type: "to-page", payload: { action: "setConsoleCapture", on } });
     if (consoleTabActive()) renderConsole();
   });
 

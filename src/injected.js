@@ -243,8 +243,8 @@
   // stream opens. Gives up quietly if the plugin isn't installed.
   (function serverLogStream() {
     let es = null;
-    let connected = false;
-    let attempts = 0;
+    let everConnected = false;
+    let failStreak = 0;
 
     function basePath() {
       const r = getRouter();
@@ -266,31 +266,34 @@
       return prefix + "/__rr-inspector/logs";
     }
     function open() {
-      if (connected) return;
-      if (es && es.readyState !== 2 /* CLOSED */) return; // still (re)connecting
+      if (es && es.readyState !== 2 /* CLOSED */) return; // already (re)connecting/open
       let url;
       try { url = endpoint(); } catch { url = "/__rr-inspector/logs"; }
       try { es = new EventSource(url); } catch { return; }
-      es.onopen = () => { connected = true; };
+      es.onopen = () => { everConnected = true; failStreak = 0; };
       es.onmessage = (e) => {
         try {
           const d = JSON.parse(e.data);
           d.location = location.pathname + location.search;
-          post(d); // { type:"console", source:"server", level, text, time }
+          post(d); // { type:"console"|"net", source:"server", ... }
         } catch {}
       };
       es.onerror = () => {
-        // Wrong base (router not ready yet) or plugin missing: close so the next
-        // tick retries with a freshly-derived base.
+        // Dropped (dev-server restart), wrong base, or plugin missing: close and let
+        // the retry loop re-open with a freshly-derived base.
         try { es.close(); } catch {}
         es = null;
+        failStreak++;
       };
     }
 
     open();
-    const iv = setInterval(() => {
-      if (connected || ++attempts > 20) { clearInterval(iv); return; }
+    // Persistent reconnect: re-open whenever the stream is down, so it survives a
+    // dev-server restart. Back off only if it never connected (plugin not installed).
+    setInterval(() => {
+      if (es) return;
+      if (!everConnected && failStreak >= 8) return;
       open();
-    }, 500);
+    }, 1500);
   })();
 })();

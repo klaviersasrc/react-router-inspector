@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>React Router Inspector — store screenshots (1280×800)</title>
+<style>
+  :root {
+    --bg: #0d1513; --surface: #131c1a; --surface-2: #182220; --border: #26332f;
+    --text: #dae4e0; --dim: #8aa39d; --faint: #5f7570; --accent: #4ec9b0;
+    --router: #c586c0; --data: #4ec9b0; --gql: #e356a7; --api: #7cb96b; --ssr: #c586c0;
+    --str: #ce9178; --num: #b5cea8; --key: #9cdcfe; --bool: #569cd6; --err: #f48771; --warnc: #dcdcaa;
+    --sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #050908; font-family: var(--sans); }
+  /* Each .shot is EXACTLY a Chrome Web Store screenshot: 1280 x 800 */
+  .shot { width: 1280px; height: 800px; margin: 0 auto; position: relative; overflow: hidden;
+    background: radial-gradient(120% 120% at 12% 0%, #16211e 0%, #0d1513 55%, #0a110f 100%);
+    display: flex; flex-direction: column; padding: 64px 72px; }
+  .shot + .shot { margin-top: 28px; }
+  .cap { margin-bottom: 26px; }
+  .eyebrow { font-family: var(--mono); font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+  .cap h2 { margin: 0; color: var(--text); font-size: 40px; line-height: 1.08; font-weight: 800; letter-spacing: -.02em; max-width: 22ch; }
+  .cap h2 b { color: var(--accent); font-weight: 800; }
+  .brand { position: absolute; top: 30px; right: 40px; display: inline-flex; align-items: center; gap: 9px; color: var(--dim); font-size: 14px; font-weight: 600; }
+  .rr { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: var(--accent); color: #0d1513; font-family: var(--mono); font-weight: 800; font-size: 12px; }
+
+  .panel { flex: 1; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface);
+    box-shadow: 0 30px 70px -30px rgba(0,0,0,.7); font-family: var(--mono); font-size: 13px; display: flex; flex-direction: column; }
+  .chrome { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); color: var(--dim); }
+  .dots { display: flex; gap: 6px; margin-right: 4px; } .dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--border); }
+  .tabs { display: flex; gap: 4px; } .tabs span { padding: 3px 10px; border-radius: 6px 6px 0 0; color: var(--faint); }
+  .tabs span.on { color: var(--text); border-bottom: 2px solid var(--accent); }
+  .split { display: grid; grid-template-columns: 1.05fr 1.3fr; flex: 1; min-height: 0; }
+  .list { border-right: 1px solid var(--border); overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+  .row.sel { background: rgba(78,201,176,.12); }
+  .tag { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #0d1513; padding: 1px 5px; border-radius: 4px; }
+  .t-router { background: var(--router); } .t-data { background: var(--data); } .t-gql { background: var(--gql); } .t-api { background: var(--api); } .t-ssr { background: var(--ssr); }
+  .m { color: var(--key); font-weight: 700; } .rt { color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .st { color: var(--dim); }
+  .row.bad .rt { color: var(--err); }
+  .detail { padding: 14px 16px; overflow: hidden; }
+  .dtabs { display: flex; gap: 16px; margin-bottom: 12px; color: var(--faint); border-bottom: 1px solid var(--border); padding-bottom: 9px; }
+  .dtabs b { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--accent); padding-bottom: 9px; margin-bottom: -10px; }
+  .tree { white-space: pre-wrap; line-height: 1.8; }
+  .k { color: var(--key); } .s { color: var(--str); } .n { color: var(--num); } .b { color: var(--bool); } .nul { color: var(--faint); } .tw { color: var(--faint); }
+  .filters { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface-2); flex-wrap: wrap; }
+  .fchip { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--border); color: var(--text); }
+  .fchip.off { opacity: .38; text-decoration: line-through; }
+  .logline { display: flex; gap: 9px; align-items: baseline; padding: 6px 14px; border-bottom: 1px solid var(--border); }
+  .src { font-size: 8px; font-weight: 800; text-transform: uppercase; background: var(--api); color: #0d1513; padding: 0 4px; border-radius: 4px; }
+  .lvl { color: var(--faint); font-size: 9px; min-width: 36px; text-transform: uppercase; font-weight: 700; }
+  .lvl.e { color: var(--err); } .lvl.w { color: var(--warnc); } .lvl.i { color: var(--bool); }
+  .loc { color: var(--faint); }
+</style>
+</head>
+<body>
+
+<!-- SHOT 1 -->
+<section class="shot">
+  <span class="brand"><span class="rr">RR</span> React Router Inspector</span>
+  <div class="cap"><p class="eyebrow">Loader &amp; action data</p><h2>Your loader data, <b>decoded</b> — real types and all.</h2></div>
+  <div class="panel">
+    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="tabs"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
+    <div class="split">
+      <div class="list">
+        <div class="row sel"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
+        <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+      </div>
+      <div class="detail">
+        <div class="dtabs"><b>Loader Data</b><span>Payload</span><span>Headers</span><span>Response</span><span>Console</span></div>
+<div class="tree"><span class="tw">▾</span> { root, routes/products }
+  <span class="tw">▾</span> <span class="k">"routes/products"</span>: { data }
+      <span class="k">category</span>: <span class="s">"widgets"</span>
+      <span class="k">inStockOnly</span>: <span class="b">true</span>
+      <span class="k">fetchedAt</span>: <span class="s">Date(2030-01-15T12:00:00Z)</span>
+      <span class="k">totals</span>: <span class="s">Map(2)</span> { today → <span class="n">41250.5</span> }
+      <span class="k">catalogId</span>: <span class="n">90071992547409910n</span>
+      <span class="k">note</span>: <span class="nul">undefined</span>
+      <span class="tw">▾</span> <span class="k">rows</span>: Array(2)
+          <span class="tw">▾</span> <span class="k">0</span>: { name: <span class="s">"Blue Widget"</span>, price: <span class="n">125</span> }</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOT 2 -->
+<section class="shot">
+  <span class="brand"><span class="rr">RR</span> React Router Inspector</span>
+  <div class="cap"><p class="eyebrow">Server-side calls</p><h2>See the SSR fetches the <b>browser can't</b>.</h2></div>
+  <div class="panel">
+    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="tabs"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
+    <div class="split">
+      <div class="list">
+        <div class="row"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
+        <div class="row sel"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
+        <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+      </div>
+      <div class="detail">
+        <div class="dtabs"><span>Loader Data</span><span>Payload</span><b>Headers</b><span>Response</span><span>Console</span></div>
+<div class="tree"><span class="tw">▾</span> { request, response }
+  <span class="tw">▾</span> <span class="k">request</span>
+      <span class="k">content-type</span>: <span class="s">"application/json"</span>
+      <span class="k">x-request-id</span>: <span class="s">"req_8f21ac"</span>
+      <span class="k">authorization</span>: <span class="s">"Bearer demo.jwt.token…"</span>
+  <span class="tw">▾</span> <span class="k">response</span>
+      <span class="k">content-type</span>: <span class="s">"application/json; charset=utf-8"</span>
+      <span class="k">cache-control</span>: <span class="s">"no-store"</span>
+      <span class="k">x-request-id</span>: <span class="s">"req_8f21ac"</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOT 3 -->
+<section class="shot">
+  <span class="brand"><span class="rr">RR</span> React Router Inspector</span>
+  <div class="cap"><p class="eyebrow">Unified console</p><h2>Browser <b>and</b> server logs, in one place.</h2></div>
+  <div class="panel">
+    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="tabs"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
+    <div class="split">
+      <div class="list">
+        <div class="row"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
+        <div class="row sel"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
+        <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+      </div>
+      <div class="detail" style="padding:0">
+        <div class="dtabs" style="padding:14px 16px 9px;margin:0"><span>Loader Data</span><span>Payload</span><span>Headers</span><span>Response</span><b>Console</b></div>
+        <div class="filters"><span class="fchip">server 4</span><span class="fchip">browser 2</span><span class="fchip off">error 1</span><span class="fchip">warn 1</span><span class="fchip">info 2</span><span class="fchip">debug 1</span></div>
+        <div class="logline"><span class="src">server</span><span class="lvl">log</span><span class="loc">/shop/products</span><span>[products.loader] fetching catalog</span></div>
+        <div class="logline"><span class="src">server</span><span class="lvl i">info</span><span class="loc">/shop/products</span><span>products.loader resolved in 231ms</span></div>
+        <div class="logline"><span class="lvl i">info</span><span class="loc">/shop/products</span><span>[cart] hydrated 3 items</span></div>
+        <div class="logline"><span class="lvl w">warn</span><span class="loc">/shop/products</span><span>price still pending at first paint</span></div>
+        <div class="logline"><span class="src">server</span><span class="lvl e">error</span><span class="loc">/shop/products</span><span>[inventory] upstream timeout</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOT 4 -->
+<section class="shot">
+  <span class="brand"><span class="rr">RR</span> React Router Inspector</span>
+  <div class="cap"><p class="eyebrow">Full request detail</p><h2>Every call's <b>URL, params &amp; response</b> — like the Network tab.</h2></div>
+  <div class="panel">
+    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="tabs"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
+    <div class="split">
+      <div class="list">
+        <div class="row"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
+        <div class="row sel"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
+        <div class="row"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
+        <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+      </div>
+      <div class="detail">
+        <div class="dtabs"><span>Loader Data</span><b>Payload</b><span>Headers</span><span>Response</span><span>Console</span></div>
+<div class="tree"><span class="tw">▾</span> { operationName, variables, query }
+    <span class="k">operationName</span>: <span class="s">"ProductList"</span>
+  <span class="tw">▾</span> <span class="k">variables</span>: { category, inStockOnly }
+      <span class="k">category</span>: <span class="s">"widgets"</span>
+      <span class="k">inStockOnly</span>: <span class="b">true</span>
+    <span class="k">query</span>: <span class="s">"query ProductList($category: String!, $inStockOnly: Boolean!) { products(…) { name price } }"</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

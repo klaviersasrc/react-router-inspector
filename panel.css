@@ -22,6 +22,8 @@
     --bg: #fff; --bg-2: #f3f3f3; --bg-3: #e8e8e8; --border: #ddd;
     --fg: #1e1e1e; --fg-dim: #6a6a6a; --sel: #cfe3ff;
     --key: #0451a5; --str: #a31515; --num: #098658; --bool: #0000ff; --null: #808080;
+    /* accent colors need darkening for contrast on white */
+    --accent: #12876f; --loader: #0b6fc4; --action: #a16207; --err: #c0392b;
   }
 }
 * { box-sizing: border-box; }
@@ -29,8 +31,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 #app { display: flex; flex-direction: column; height: 100vh; }
 
 #toolbar {
-  display: flex; align-items: center; gap: 8px;
-  padding: 4px 8px; background: var(--bg-2);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 6px;
+  padding: 5px 8px; background: var(--bg-2);
   border-bottom: 1px solid var(--border); flex: 0 0 auto;
 }
 .brand {
@@ -39,7 +41,14 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 }
 #toolbar button, #toolbar .chk { color: var(--fg); background: none; border: 1px solid var(--border); border-radius: 3px; padding: 2px 8px; cursor: pointer; }
 #toolbar .chk { display: inline-flex; align-items: center; gap: 4px; }
-#toolbar #filter { margin-left: auto; flex: 0 1 260px; background: var(--bg-3); border: 1px solid var(--border); color: var(--fg); border-radius: 3px; padding: 3px 8px; }
+#toolbar #filter {
+  margin-left: auto; flex: 1 1 200px; min-width: 150px;
+  background: var(--bg-3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238aa39d' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.3'/%3E%3Cpath d='M10.5 10.5 14 14'/%3E%3C/svg%3E") no-repeat 8px center;
+  background-size: 13px; border: 1px solid var(--border); color: var(--fg);
+  border-radius: 4px; padding: 4px 8px 4px 26px; font: inherit;
+}
+#toolbar #filter:focus { outline: none; border-color: var(--accent); }
+#toolbar #filter::placeholder { color: var(--fg-dim); }
 #setupBtn { margin-left: 2px; }
 .badge { color: var(--fg-dim); font-size: 11px; padding: 1px 6px; border: 1px solid var(--border); border-radius: 10px; }
 
@@ -133,3 +142,13 @@ body.col-resizing iframe { pointer-events: none; }
 .jt .nul { color: var(--null); }
 .jt .collapsed > .children { display: none; }
 .jt .preview { color: var(--fg-dim); }
+
+/* Make expand/collapse affordances stand out (persistent chip, not hover-only) */
+.jt .tw, .log-tw { color: var(--accent); font-weight: 700; cursor: pointer; border-radius: 3px; padding: 0 3px; background: color-mix(in srgb, var(--accent) 15%, transparent); }
+.jt .tw:hover, .log-tw:hover { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+.jt .preview { cursor: pointer; }
+.jt .preview:hover { color: var(--accent); }
+.jt .row:hover > .tw { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+/* Console: the clickable summary line of a collapsed multi-line entry */
+.log:has(.log-tw) .log-msg { cursor: pointer; border-radius: 3px; padding: 0 3px; }
+.log:has(.log-tw) .log-msg:hover { background: color-mix(in srgb, var(--accent) 13%, transparent); }
