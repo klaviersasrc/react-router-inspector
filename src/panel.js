@@ -154,9 +154,10 @@
     if (msg.type === "console") {
       sawBridge = true;
       if (msg.source === "server") {
-        // The httpClient's own HTTP Request/Response text dumps are superseded by
-        // the structured "ssr" network rows — drop them to de-noise the Console.
-        if (/\[httpClient\]\s+HTTP (Request|Response)/i.test(msg.text || "")) return;
+        // Many server HTTP clients also print their own "HTTP Request/Response"
+        // text dumps, which the structured "ssr" network rows supersede — drop
+        // those to de-noise the Console (generic pattern, not any one logger).
+        if (/\bHTTP (Request|Response)\b\s*:/i.test(msg.text || "")) return;
         const key = "c|" + msg.time + "|" + msg.text;
         if (seenServer.has(key)) return;
         seenServer.add(key);

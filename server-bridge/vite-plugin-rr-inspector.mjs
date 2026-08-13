@@ -2,7 +2,7 @@
 // calls to the React Router Inspector extension.
 //
 // The extension runs in the browser and cannot see your Node server's stdout
-// (loaders, the fusion/core httpClient logger, LOADER timing, etc.) or its
+// (loaders, the server HTTP-client logger, loader timing, etc.) or its
 // server-side fetch calls. This plugin (1) tees process.stdout/stderr — capturing
 // the terminal stream verbatim, whether lines come from console.* or a logger
 // writing straight to stdout — and (2) intercepts global fetch (undici) to emit
@@ -124,7 +124,7 @@ export default function rrInspectorServerLogs(options = {}) {
     process.stderr.write = tee(process.stderr.write.bind(process.stderr), "error");
   }
 
-  // Intercept global fetch (undici) — the fusion/core httpClient — and emit each
+  // Intercept global fetch (undici) — the app's server-side HTTP client — and emit each
   // request/response as a structured "net" event (URL, method, headers, status,
   // timing, body). Non-destructive: reads the body via res.clone().
   function patchFetch() {

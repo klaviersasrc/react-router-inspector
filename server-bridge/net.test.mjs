@@ -8,7 +8,7 @@ const fakeServer = { middlewares: { use: (p, h) => routes.push({ path: p, handle
 
 // Stub global fetch BEFORE the plugin patches it (mimics undici global fetch).
 globalThis.fetch = async () =>
-  new Response(JSON.stringify({ vacantPositions: [{ bucket: "1-2yr", count: 7 }] }), {
+  new Response(JSON.stringify({ products: [{ bucket: "1-2yr", count: 7 }] }), {
     status: 200,
     headers: { "content-type": "application/json", server: "nginx/1.29.7" },
   });
@@ -41,9 +41,9 @@ const checks = {
   status200: net?.status === 200,
   requestHeaderCaptured: net?.reqHeaders?.["X-XSRF-TOKEN"] === "abc",
   responseHeaderCaptured: /json/.test(net?.resHeaders?.["content-type"] || ""),
-  responseBodyCaptured: !!net?.resBody && net.resBody.includes("vacantPositions"),
+  responseBodyCaptured: !!net?.resBody && net.resBody.includes("products"),
   timingCaptured: typeof net?.durationMs === "number",
-  appStillReadsBody: appBody.includes("vacantPositions"), // clone didn't consume original
+  appStillReadsBody: appBody.includes("products"), // clone didn't consume original
 };
 process.stdout.write("NET CHECKS " + JSON.stringify(checks) + "\n");
 process.exit(Object.values(checks).every(Boolean) ? 0 : 1);

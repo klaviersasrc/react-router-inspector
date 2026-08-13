@@ -1,18 +1,18 @@
 # Server-log bridge (dev only)
 
 The extension runs in the browser and **cannot see your SSR server's stdout** —
-where loaders, the `httpClient` logger, `LOADER … triggered` timing, and the
-upstream the upstream API request/response dumps print. This **dev-only** Vite plugin
+where loaders, your server logger, `LOADER … triggered` timing, and the
+upstream API request/response dumps print. This **dev-only** Vite plugin
 exposes that server console as a same-origin SSE stream; the extension's page
 bridge consumes it and shows each line in the **Console** tab tagged `server`.
 
 Built for **React Router v7 framework mode** (SSR runs in the Vite dev process,
-so patching `console` here captures the loader/httpClient output).
+so patching `console` here captures the loader / server output).
 
 ## How it works
 
 ```
-loader / httpClient console.log(...)     (Vite dev process — same one running SSR)
+loader / server console.log(...)     (Vite dev process — same one running SSR)
   → [plugin] tees each line to SSE at  <base>__rr-inspector/logs   (e.g. /shop/__rr-inspector/logs)
   → [extension page bridge] opens that stream (derives <base> from the router basename)
   → panel Console tab, tagged “server”
@@ -44,22 +44,24 @@ export default defineConfig({
 ```
 
 Restart the dev server, reload the app with the extension's **Console** tab open.
-Repeat per app you want (invoice, admin, reports, planning) — or add it to a shared
+Repeat for each app you want to inspect — or add it to a shared
 config if those extend one.
 
 ## Options
 
 ```ts
 rrInspector({
-  levels: ["log", "info", "warn", "error", "debug", "trace"], // methods to forward
-  maxDepth: 6,   // util.inspect depth for object args (the httpClient dumps)
+  maxLine: 8000,          // cap per console line
+  maxBody: 2_000_000,     // cap per request/response body (≈2 MB); Infinity to never truncate
+  dropViteClientEcho: true, // skip browser logs Vite forwards to the terminal
+  bufferMax: 300,         // recent events replayed to a panel when it connects
 })
 ```
 
 ## Structured SSR calls (included)
 
 Beyond forwarding server logs as text, the plugin also **intercepts global `fetch`**
-(undici — what the `fusion/core` httpClient uses) and emits each call as a structured
+(undici, the common Node HTTP client) and emits each call as a structured
 `net` event: URL, method, request+response headers, status, **response body**, and
 timing. The extension renders these as first-class **network rows** tagged `ssr` in
 the left list — a real Network-tab view of your server-side calls, with the same
@@ -67,7 +69,7 @@ Headers / Payload / Response tabs.
 
 - Non-destructive: reads the response via `res.clone()`, so your app still consumes
   its own body normally.
-- Bodies are size-capped (req 8 KB, res 20 KB) to keep the stream light.
-- You'll see each SSR call **twice** — once as a text log line in Console (the
-  httpClient's own `DEBUG` output) and once as a structured `ssr` network row. Filter
+- Bodies are size-capped by `maxBody` (default ≈2 MB; set `Infinity` to never truncate).
+- You'll see each SSR call **twice** — once as a text log line in Console (your
+  server logger's own text output) and once as a structured `ssr` network row. Filter
   the Console by `server` or ignore the text dupes; the `ssr` rows are the clean view.

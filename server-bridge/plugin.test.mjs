@@ -16,15 +16,15 @@ const written = [];
 const fakeRes = { writeHead() {}, write: (s) => written.push(s), end() {} };
 routes.find((r) => r.path === "/shop/__rr-inspector/logs").handler({ on() {} }, fakeRes);
 
-// Simulate the fusion/core logger writing straight to stdout (NOT via console.*):
+// Simulate a server logger writing straight to stdout (NOT via console.*):
 process.stdout.write(
-  "2026-08-10 12:00:13,727 DEBUG [httpClient] HTTP Request: https://api.example.com/catalog/summary?category=widgets\n"
+  "2026-08-10 12:00:13,727 DEBUG [http] HTTP Request: https://api.example.com/catalog/summary?category=widgets\n"
 );
 process.stdout.write("LOADER routes/overview triggered - 1159.43ms\n");
 process.stderr.write("\x1B[31mERROR upstream failed\x1B[0m\n"); // ANSI + stderr
 process.stdout.write("12:00:14 PM [vite] (client) [console.warn] browser echo\n"); // should be dropped
 // A single multi-line write (one console.log(obj)) must become ONE entry, not many:
-process.stdout.write("params {\n  method: 'GET',\n  url: 'http://x?fiscalYear=2025'\n}\n");
+process.stdout.write("params {\n  method: 'GET',\n  url: 'http://x?category=widgets'\n}\n");
 
 // Restore BEFORE asserting so our own output isn't captured.
 process.stdout.write = origOut;
