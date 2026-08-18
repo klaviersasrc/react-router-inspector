@@ -15,7 +15,7 @@
   --bool: #569cd6;
   --null: #808080;
   --sel: #094771;
-  font: 12px/1.5 -apple-system, "Segoe UI", Menlo, monospace;
+  font: 14px/1.5 -apple-system, "Segoe UI", Menlo, monospace;
 }
 @media (prefers-color-scheme: light) {
   :root {
@@ -84,7 +84,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 #resizer:hover, #resizer.dragging { background: var(--accent); }
 body.col-resizing { cursor: col-resize; user-select: none; }
 body.col-resizing iframe { pointer-events: none; }
-#list li { padding: 5px 8px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+#list li { padding: 5px 8px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 7px; align-items: baseline; font-size: 12px; }
 #list li:hover { background: var(--bg-2); }
 #list li.sel { background: var(--sel); }
 #list li .tag { flex: 0 0 auto; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 1px 4px; border-radius: 3px; color: var(--bg); }
@@ -93,11 +93,11 @@ body.col-resizing iframe { pointer-events: none; }
 #list li .tag-graphql { background: #e356a7; }
 #list li .tag-api { background: #6a9955; }
 #list li .tag-ssr { background: #c586c0; }
-#list li .method { font-weight: 700; flex: 0 0 auto; font-size: 11px; }
+#list li .method { font-weight: 700; flex: 0 0 auto; }
 #list li .method.get { color: var(--loader); }
 #list li .method.post { color: var(--action); }
 #list li .route { color: var(--fg); flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#list li .meta { color: var(--fg-dim); flex: 0 0 auto; font-size: 11px; }
+#list li .meta { color: var(--fg-dim); flex: 0 0 auto; }
 #list li.err .route { color: var(--err); }
 
 #detail { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
@@ -111,10 +111,17 @@ body.col-resizing iframe { pointer-events: none; }
 #tabs button[data-tip]::before { content: ""; position: absolute; top: calc(100% + 1px); left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-bottom-color: var(--border); opacity: 0; pointer-events: none; z-index: 20; transition: opacity .12s; }
 #tabs button[data-tip]:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
 #tabs button[data-tip]:hover::before { opacity: 1; }
+/* active tab shows its text label inline (in the tab bar, never in the pane) */
+#tabs button .lbl { display: none; }
+#tabs button.active .lbl { display: inline; margin-left: 6px; font: 600 12px/1 -apple-system, "Segoe UI", sans-serif; }
+/* the active tab's label is already visible, so drop its hover tooltip */
+#tabs button.active[data-tip]::after, #tabs button.active[data-tip]::before { display: none; }
 #panes { flex: 1 1 auto; overflow: auto; position: relative; }
 .pane { display: none; padding: 8px 10px; }
 .pane.active { display: block; }
 .empty { color: var(--fg-dim); padding: 24px; text-align: center; }
+.trunc-banner { margin: -8px -10px 8px; padding: 7px 10px; background: color-mix(in srgb, var(--err) 14%, var(--bg)); border-bottom: 1px solid var(--border); border-left: 3px solid var(--err); color: var(--fg); font-size: 12px; line-height: 1.45; }
+.trunc-banner strong { color: var(--err); }
 
 /* Console view */
 .log-filters { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 5px 2px; margin: -8px -10px 6px; padding-left: 10px; background: var(--bg); border-bottom: 1px solid var(--border); }
@@ -123,6 +130,8 @@ body.col-resizing iframe { pointer-events: none; }
 .chip:hover { border-color: var(--accent); }
 .chip.off { opacity: .4; text-decoration: line-through; }
 #tabs .count { position: absolute; top: 1px; right: 1px; min-width: 13px; height: 13px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 700 9px/1 -apple-system, "Segoe UI", sans-serif; background: var(--err); color: #fff; border-radius: 7px; padding: 0 3px; pointer-events: none; }
+/* when Console is the active tab its count sits inline after the label, not in the corner */
+#tabs button.active .count { position: static; top: auto; right: auto; margin-left: 5px; }
 #tabs .count:empty { display: none; }
 .log { padding: 3px 6px; border-bottom: 1px solid var(--border); font-family: Menlo, monospace; white-space: pre-wrap; word-break: break-word; }
 .log-src { display: inline-block; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; background: #6a9955; color: var(--bg); border-radius: 3px; padding: 0 3px; margin-right: 5px; vertical-align: 1px; }
@@ -139,9 +148,9 @@ body.col-resizing iframe { pointer-events: none; }
 .log-error .log-lvl { color: var(--err); }
 
 /* JSON tree */
-.jt { font-family: Menlo, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.jt { font-family: Menlo, monospace; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .jt .row { cursor: default; }
-.jt .tw { display: inline-block; width: 12px; color: var(--fg-dim); cursor: pointer; user-select: none; }
+.jt .tw { user-select: none; }
 .jt .k { color: var(--key); }
 .jt .s { color: var(--str); }
 .jt .n { color: var(--num); }
@@ -151,11 +160,12 @@ body.col-resizing iframe { pointer-events: none; }
 .jt .preview { color: var(--fg-dim); }
 
 /* Make expand/collapse affordances stand out (persistent chip, not hover-only) */
-.jt .tw, .log-tw { color: var(--accent); font-weight: 700; cursor: pointer; border-radius: 3px; padding: 0 3px; background: color-mix(in srgb, var(--accent) 15%, transparent); }
-.jt .tw:hover, .log-tw:hover { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+.jt .tw, .log-tw { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; box-sizing: border-box; line-height: 1; font-size: 9px; vertical-align: middle; }
+.jt .tw:not(:empty), .log-tw:not(:empty) { color: var(--accent); font-weight: 700; cursor: pointer; border-radius: 3px; background: color-mix(in srgb, var(--accent) 15%, transparent); }
+.jt .tw:not(:empty):hover, .log-tw:not(:empty):hover { background: color-mix(in srgb, var(--accent) 32%, transparent); }
 .jt .preview { cursor: pointer; }
 .jt .preview:hover { color: var(--accent); }
-.jt .row:hover > .tw { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.jt .row:hover > .tw:not(:empty) { background: color-mix(in srgb, var(--accent) 16%, transparent); }
 /* Console: the clickable summary line of a collapsed multi-line entry */
 .log:has(.log-tw) .log-msg { cursor: pointer; border-radius: 3px; padding: 0 3px; }
 .log:has(.log-tw) .log-msg:hover { background: color-mix(in srgb, var(--accent) 13%, transparent); }

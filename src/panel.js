@@ -182,6 +182,7 @@
       } catch {}
       let path = msg.url;
       try { path = new URL(msg.url, location.href).pathname; } catch {}
+      const rb = msg.resBody != null ? decodeBody(msg.resBody) : null;
       const ev = {
         id: cryptoId(),
         source: "server",
@@ -193,12 +194,10 @@
         route: `${path}${msg.durationMs != null ? "  ·  " + msg.durationMs + "ms" : ""}`,
         reqHeaders: msg.reqHeaders || null,
         resHeaders: msg.resHeaders || null,
-        payload: { query, body: msg.reqBody != null ? (tryJson(msg.reqBody) ?? msg.reqBody) : null },
-        response: {
-          raw: msg.resBody != null ? msg.resBody : (msg.error || null),
-          decoded: msg.resBody != null ? (tryJson(msg.resBody) ?? msg.resBody) : (msg.error ? { error: msg.error } : null),
-          mime: "SSR fetch",
-        },
+        payload: { query, body: msg.reqBody != null ? decodeBody(msg.reqBody).value : null },
+        response: rb
+          ? { raw: rb.raw, decoded: rb.value, truncated: rb.truncated, size: rb.size, mime: "SSR fetch" }
+          : { raw: msg.error || null, decoded: msg.error ? { error: msg.error } : null, truncated: false, mime: "SSR fetch" },
         error: msg.ok === false || (msg.status || 0) >= 400 || !!msg.error,
       };
       events.push(ev);
@@ -319,6 +318,7 @@
       if (f && !(ev.route + " " + ev.url).toLowerCase().includes(f)) continue;
       const li = document.createElement("li");
       li.dataset.id = ev.id;
+      li.title = ev.url || ev.route; // full path/URL on hover (list truncates with ellipsis)
       if (ev.error) li.classList.add("err");
       if (selected === ev.id) li.classList.add("sel");
       const kind = ev.kind || (ev.source === "bridge" ? "router" : "api");
@@ -342,6 +342,69 @@
       });
       listEl.appendChild(li);
     }
+  }
+
+  // ---- truncation handling ---------------------------------------------------
+  // The dev plugin appends " …[truncated]" when a body exceeds its maxBody cap.
+  // Detect that, strip the corrupting marker (so it doesn't invalidate the JSON),
+  // and best-effort pretty-print the valid partial instead of a raw text wall.
+  const TRUNC_MARK = " …[truncated]";
+  function splitTruncation(s) {
+    if (typeof s === "string" && s.endsWith(TRUNC_MARK)) {
+      return { text: s.slice(0, -TRUNC_MARK.length), truncated: true };
+    }
+    return { text: s, truncated: false };
+  }
+  // Make a mid-stream-truncated JSON string renderable: trim the last incomplete
+  // token and close any still-open structures. Returns a parsed value or null.
+  function repairPartialJson(s) {
+    if (typeof s !== "string") return null;
+    const stack = [];
+    let inStr = false, esc = false, safeLen = 0, safeClose = "";
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (c === "\\") esc = true;
+        else if (c === '"') inStr = false;
+        continue;
+      }
+      if (c === '"') inStr = true;
+      else if (c === "{") stack.push("}");
+      else if (c === "[") stack.push("]");
+      else if (c === "}" || c === "]") stack.pop();
+      if (c === "," || c === "}" || c === "]") {
+        safeLen = i + 1;
+        safeClose = stack.slice().reverse().join(""); // close open containers, innermost first
+      }
+    }
+    if (!safeLen) return null;
+    const candidate = s.slice(0, safeLen).replace(/,\s*$/, "") + safeClose;
+    try { return JSON.parse(candidate); } catch { return null; }
+  }
+  // Decode a captured body: full JSON → object; truncated JSON → partial tree;
+  // otherwise the raw (marker-stripped) string.
+  function decodeBody(s) {
+    const t = splitTruncation(s);
+    if (t.text == null) return { value: null, raw: null, truncated: t.truncated, size: 0 };
+    const value = tryJson(t.text) ?? (t.truncated ? repairPartialJson(t.text) : null) ?? t.text;
+    return { value, raw: t.text, truncated: t.truncated, size: t.text.length };
+  }
+  function fmtSize(n) {
+    if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB";
+    if (n >= 1024) return Math.round(n / 1024) + " KB";
+    return n + " B";
+  }
+  function makeTruncBanner(ev) {
+    const b = document.createElement("div");
+    b.className = "trunc-banner";
+    const s = document.createElement("strong");
+    s.textContent = "Response truncated";
+    const span = document.createElement("span");
+    const shown = ev.response.size || (ev.response.raw ? ev.response.raw.length : 0);
+    span.textContent = ` — the dev plugin capped this body at ~${fmtSize(shown)}. Showing the valid partial below. Raise the cap with rrInspector({ maxBody: Infinity }) in vite.config to capture the full response.`;
+    b.append(s, span);
+    return b;
   }
 
   function jsonInto(pane, value, emptyMsg) {
@@ -390,8 +453,10 @@
       "No headers captured (bridge/router event — open the same call under a network row for headers)."
     );
     jsonInto(panes.response, ev.response.decoded, ev.response.raw ? "Could not decode; see Raw." : "Waiting for response body…");
+    if (ev.response.truncated) panes.response.insertBefore(makeTruncBanner(ev), panes.response.firstChild);
     const raw = panes.raw;
     raw.textContent = "";
+    if (ev.response.truncated) raw.appendChild(makeTruncBanner(ev));
     const pre = document.createElement("pre");
     pre.className = "jt";
     pre.textContent = ev.response.raw ?? "(no raw body — router event; data read from live state)";

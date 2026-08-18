@@ -1,6 +1,6 @@
 # React Router Inspector
 
-[![Latest release](https://img.shields.io/badge/release-v1.0.3-4ec9b0?style=flat-square)](https://github.com/klaviersasrc/react-router-inspector/releases/latest)
+[![Latest release](https://img.shields.io/badge/release-v1.0.5-4ec9b0?style=flat-square)](https://github.com/klaviersasrc/react-router-inspector/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](LICENSE)
 [![Chrome](https://img.shields.io/badge/Chrome-MV3%20DevTools-6b7280?style=flat-square)](manifest.json)
 
