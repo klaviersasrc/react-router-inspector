@@ -15,7 +15,7 @@
   --bool: #569cd6;
   --null: #808080;
   --sel: #094771;
-  font: 12px/1.5 -apple-system, "Segoe UI", Menlo, monospace;
+  font: 14px/1.5 -apple-system, "Segoe UI", Menlo, monospace;
 }
 @media (prefers-color-scheme: light) {
   :root {
