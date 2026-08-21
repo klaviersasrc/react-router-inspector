@@ -395,6 +395,20 @@
     if (n >= 1024) return Math.round(n / 1024) + " KB";
     return n + " B";
   }
+  // Pull an embedded JSON object/array out of a log line (e.g. a server stdout
+  // line like `Precaching: [ {…} ]`) so it can render as a tree, not raw text.
+  // The lookahead skips "[Prefix]" log tags and only matches a real JSON opener.
+  function extractLogJson(text) {
+    if (typeof text !== "string" || text.length < 8) return null;
+    const m = text.match(/[\[{](?=\s*["\[{])/);
+    if (!m || m.index == null) return null;
+    const src = text.slice(m.index);
+    const value = tryJson(src) ?? repairPartialJson(src);
+    if (value && typeof value === "object") {
+      return { prefix: text.slice(0, m.index).replace(/\s*$/, ""), value };
+    }
+    return null;
+  }
   function makeTruncBanner(ev) {
     const b = document.createElement("div");
     b.className = "trunc-banner";
@@ -548,8 +562,30 @@
       const msg = document.createElement("span");
       msg.className = "log-msg";
       const text = typeof l.text === "string" ? l.text : String(l.text ?? "");
+      const objArgs = (l.args || []).filter((a) => a && typeof a === "object");
+      // Server logs are plain stdout text (no structured args). If the line has an
+      // embedded JSON blob, pretty-print it as a collapsible tree instead of a
+      // one-line wall of text. (Browser logs already get a tree from their args.)
+      const embedded = objArgs.length ? null : extractLogJson(text);
       const nl = text.indexOf("\n");
-      if (nl >= 0) {
+      if (embedded) {
+        const tw = document.createElement("span");
+        tw.className = "tw log-tw";
+        tw.textContent = "▸";
+        msg.textContent = embedded.prefix || "JSON";
+        msg.style.cursor = "pointer";
+        const tree = window.renderJsonTree(embedded.value);
+        tree.classList.add("log-tree");
+        tree.style.display = "none";
+        const toggle = () => {
+          const open = tree.style.display === "none";
+          tree.style.display = open ? "block" : "none";
+          tw.textContent = open ? "▾" : "▸";
+        };
+        tw.addEventListener("click", toggle);
+        msg.addEventListener("click", toggle);
+        row.append(lvl, loc, tw, msg, tree);
+      } else if (nl >= 0) {
         // Multi-line entry (a logged object) -> collapsible: summary + indented body.
         const tw = document.createElement("span");
         tw.className = "tw log-tw";
@@ -572,7 +608,6 @@
         msg.textContent = text;
         row.append(lvl, loc, msg);
       }
-      const objArgs = (l.args || []).filter((a) => a && typeof a === "object");
       if (objArgs.length) {
         const tree = window.renderJsonTree(objArgs.length === 1 ? objArgs[0] : objArgs);
         tree.classList.add("log-tree");
