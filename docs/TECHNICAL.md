@@ -5,17 +5,18 @@ decisions behind it.
 
 ## Overview
 
-The tool is a **Chrome DevTools extension** (Manifest V3) plus an optional
-**dev-only Vite plugin**. It pulls from three data sources and unifies them in one
-panel:
+The tool is a **Chrome DevTools extension** (Manifest V3) plus an optional server
+bridge. It pulls from three data sources and unifies them in one panel:
 
 1. **Live router bridge** — reads the running router's state directly.
 2. **DevTools network capture** — decodes the browser's `.data` / API traffic.
-3. **Server bridge** (the Vite plugin) — streams SSR/server logs and server-side
-   `fetch` calls the browser can't see.
+3. **Server bridge** — the bundled Vite plugin handles local development; a
+   deployed app can implement the same SSE protocol to stream SSR/server logs and
+   server-side `fetch` calls the browser can't see.
 
-Everything runs locally. No remote code (the turbo-stream decoder is vendored), no
-network calls off the machine, no data collection.
+There is no remote extension code (the turbo-stream decoder is vendored), no
+third-party telemetry, and no data collection. Deployed server events travel only
+from the inspected same-origin application to the local extension panel.
 
 ## Components
 
@@ -26,6 +27,7 @@ panel.html/css/js        the panel UI, DevTools network capture, rendering
 src/turbo-init.mjs       exposes the vendored turbo-stream decoder (external — CSP forbids inline)
 src/vendor/turbo-stream  the single-fetch decoder (MIT, pinned to RR's 2.4.1)
 src/json-tree.js         collapsible tree renderer (Dates/Maps/BigInt/undefined aware)
+src/site-access.js       optional per-origin permission + dynamic script registration
 src/injected.js          MAIN-world page bridge: router subscribe + fetch capture + console + SSE consumer
 src/content.js           ISOLATED relay: page <-> extension (both directions)
 src/background.js        service worker: routes messages between panels and tabs
@@ -99,19 +101,27 @@ panel  <—chrome.runtime port—>  background(service worker)  <—chrome.tabs�
 - The downward channel (panel → page) carries controls like the console-capture
   toggle.
 
+## Per-site access
+
+Static content scripts cover localhost without an extra prompt. On any other
+HTTP(S) origin, the panel requests only that exact origin through
+`optional_host_permissions`, then uses `chrome.scripting.registerContentScripts`
+to persist the ISOLATED and MAIN-world bridges for that origin. DevTools network
+capture remains available before site access is granted.
+
 ## Store-hardened manifest
 
 For a Web Store submission:
-- **Remove the unused `storage` permission** (the code uses page `localStorage`).
-- **Narrow `host_permissions`** from `<all_urls>` to the hosts you actually inspect,
-  e.g. `http://localhost/*`, `https://localhost/*`, and your API host. Broad host
-  access triggers heavier review. (Keep `<all_urls>` only if you truly need to
-  inspect arbitrary origins.)
+- Required `host_permissions` remain limited to localhost.
+- Broad HTTP(S) patterns are optional. The user explicitly approves the exact
+  deployed origin from the DevTools panel before dynamic scripts are registered.
+- The `scripting` permission is used only for those user-approved registrations.
 - No other changes required — there's no remote code or data collection to declare.
 
 ## Testing
 
 - `test/decode.test.mjs` — turbo-stream round-trip incl. Date/Map/BigInt/undefined.
+- `test/site-access.test.mjs` — exact-origin matching and dynamic registration.
 - `server-bridge/plugin.test.mjs` — stdout tee: logger-bypass capture, multi-line
   grouping, ANSI strip, echo-drop.
 - `server-bridge/net.test.mjs` — fetch interceptor: structured event, non-destructive

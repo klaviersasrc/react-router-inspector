@@ -5,6 +5,9 @@
   const filterEl = document.getElementById("filter");
   const preserveEl = document.getElementById("preserve");
   const modeEl = document.getElementById("mode");
+  const siteAccessEl = document.getElementById("siteAccess");
+  const serverStatusEl = document.getElementById("serverStatus");
+  const serverDiagnosticEl = document.getElementById("serverDiagnostic");
   const panes = {
     loader: document.querySelector('[data-pane="loader"]'),
     payload: document.querySelector('[data-pane="payload"]'),
@@ -23,6 +26,7 @@
   const LEVEL_ORDER = ["error", "warn", "info", "debug", "log", "trace", "dir", "dirxml", "table", "group", "groupCollapsed", "assert", "count"];
   let selected = null;
   let sawBridge = false;
+  let siteAccessAction = null;
 
   // ---- React Router request heuristics ---------------------------------------
   // Framework mode (single fetch): GET/POST to a URL whose pathname ends in ".data",
@@ -148,6 +152,11 @@
     if (msg.type === "bridge-hello") {
       sawBridge = true;
       setMode("bridge");
+      setSiteAccessState("Site enabled", "enabled", null);
+      return;
+    }
+    if (msg.type === "server-stream-status") {
+      setServerStatus(msg.status, msg.url);
       return;
     }
     // Captured console.* call (incl. SSR/loader logs surfaced during hydration).
@@ -307,6 +316,114 @@
     modeEl.className = "badge " + kind;
     modeEl.textContent = kind === "bridge" ? "live router bridge" : "network decode";
   }
+
+  function setSiteAccessState(label, kind, action) {
+    siteAccessEl.hidden = false;
+    siteAccessEl.textContent = label;
+    siteAccessEl.className = `site-access ${kind || ""}`;
+    siteAccessEl.disabled = !action;
+    siteAccessAction = action;
+  }
+
+  function setServerStatus(status, url) {
+    const label = {
+      connected: "server: connected",
+      connecting: "server: connecting",
+      reconnecting: "server: reconnecting",
+      unavailable: "server: unavailable",
+    }[status] || "server: waiting";
+    const className = {
+      connected: "server-connected",
+      reconnecting: "server-reconnecting",
+      unavailable: "server-unavailable",
+    }[status] || "server-waiting";
+
+    serverStatusEl.className = `badge ${className}`;
+    serverStatusEl.textContent = label;
+    serverStatusEl.title = url ? `${label} — ${url}` : label;
+
+    if (serverDiagnosticEl) {
+      if (status === "connected") {
+        serverDiagnosticEl.textContent = `Connected to ${url}.`;
+      } else if (status === "unavailable") {
+        serverDiagnosticEl.textContent =
+          `The page bridge is enabled, but ${url} did not open as an SSE stream. ` +
+          "Confirm the deployed server bridge and proxy route are enabled.";
+      } else if (status === "reconnecting") {
+        serverDiagnosticEl.textContent = `The server stream disconnected; reconnecting to ${url}.`;
+      } else {
+        serverDiagnosticEl.textContent = url
+          ? `Connecting to ${url}…`
+          : "Waiting for the page bridge…";
+      }
+    }
+  }
+
+  function inspectedUrl() {
+    return new Promise((resolve) => {
+      chrome.devtools.inspectedWindow.eval("location.href", (value, exception) => {
+        resolve(exception ? null : value);
+      });
+    });
+  }
+
+  async function initSiteAccess() {
+    const access = window.RRInspectorSiteAccess;
+    const rawUrl = await inspectedUrl();
+    if (!access || !rawUrl) return;
+
+    let pattern;
+    try {
+      pattern = access.originPattern(rawUrl);
+    } catch {
+      return;
+    }
+    if (!pattern) return;
+
+    if (access.isBuiltInOrigin(rawUrl)) {
+      setSiteAccessState("Site enabled", "enabled", null);
+      return;
+    }
+
+    try {
+      const granted = await access.hasPermission(chrome, pattern);
+      if (granted) {
+        const registeredNow = await access.ensureRegistered(chrome, pattern);
+        if (registeredNow && !sawBridge) {
+          setSiteAccessState("Reload to enable", "needs-access", () => {
+            chrome.devtools.inspectedWindow.reload();
+          });
+        } else {
+          setSiteAccessState("Site enabled", "enabled", null);
+        }
+        return;
+      }
+    } catch {
+      setSiteAccessState("Site access error", "error", initSiteAccess);
+      return;
+    }
+
+    setSiteAccessState(`Enable ${new URL(rawUrl).host}`, "needs-access", async () => {
+      setSiteAccessState("Requesting access…", "needs-access", null);
+      try {
+        const granted = await access.requestAndRegister(chrome, pattern);
+        if (!granted) {
+          setSiteAccessState("Access not granted", "error", initSiteAccess);
+          return;
+        }
+        setSiteAccessState("Reloading…", "enabled", null);
+        chrome.devtools.inspectedWindow.reload();
+      } catch {
+        setSiteAccessState("Site access error", "error", initSiteAccess);
+      }
+    });
+  }
+
+  siteAccessEl.addEventListener("click", () => {
+    if (siteAccessAction) siteAccessAction();
+  });
+  initSiteAccess();
+
   // Default to network mode until/unless a bridge announces itself.
   setMode("network");
 

@@ -235,16 +235,24 @@
     });
   })();
 
-  // ---- 4. server-log stream (from the dev Vite plugin, if installed) --------
-  // Opens the plugin's same-origin SSE stream and forwards each server line to
+  // ---- 4. server-log stream (from a local or deployed bridge, if enabled) ----
+  // Opens the bridge's same-origin SSE stream and forwards each server event to
   // the panel. The endpoint lives under the app base (e.g. /app/…) so the gateway
   // routes it — but the router (whence we read the basename) isn't ready at
   // document_start, so we retry, re-deriving the base each attempt, until the
-  // stream opens. Gives up quietly if the plugin isn't installed.
+  // stream opens. Gives up quietly if no bridge is enabled.
   (function serverLogStream() {
     let es = null;
     let everConnected = false;
     let failStreak = 0;
+    let lastStatus = "";
+
+    function report(status, url) {
+      const key = `${status}|${url}`;
+      if (key === lastStatus) return;
+      lastStatus = key;
+      post({ type: "server-stream-status", status, url });
+    }
 
     function basePath() {
       const r = getRouter();
@@ -269,8 +277,13 @@
       if (es && es.readyState !== 2 /* CLOSED */) return; // already (re)connecting/open
       let url;
       try { url = endpoint(); } catch { url = "/__rr-inspector/logs"; }
+      report(everConnected ? "reconnecting" : "connecting", url);
       try { es = new EventSource(url); } catch { return; }
-      es.onopen = () => { everConnected = true; failStreak = 0; };
+      es.onopen = () => {
+        everConnected = true;
+        failStreak = 0;
+        report("connected", url);
+      };
       es.onmessage = (e) => {
         try {
           const d = JSON.parse(e.data);
@@ -279,17 +292,18 @@
         } catch {}
       };
       es.onerror = () => {
-        // Dropped (dev-server restart), wrong base, or plugin missing: close and let
+        // Dropped (server restart), wrong base, or bridge unavailable: close and let
         // the retry loop re-open with a freshly-derived base.
         try { es.close(); } catch {}
         es = null;
         failStreak++;
+        report(everConnected ? "reconnecting" : "unavailable", url);
       };
     }
 
     open();
     // Persistent reconnect: re-open whenever the stream is down, so it survives a
-    // dev-server restart. Back off only if it never connected (plugin not installed).
+    // server restart. Back off only if it never connected (bridge unavailable).
     setInterval(() => {
       if (es) return;
       if (!everConnected && failStreak >= 8) return;

@@ -12,6 +12,8 @@ console logs — all in one tab.
 4. Click **Load unpacked** and select this unzipped folder (the one with `manifest.json`).
 5. Done. Open any React Router app, open **DevTools** (⌥⌘I), and pick the **React Router** tab.
    - The tab only registers when DevTools *opens*, so if it's missing, close and reopen DevTools.
+   - On a non-local site, click **Enable this site** and approve access to that exact
+     origin. The panel reloads the page with the live bridge enabled.
 
 ## Using it
 
@@ -24,11 +26,12 @@ console logs — all in one tab.
 
 ## Server-side logs & SSR calls (optional)
 
-To also see your **server** logs and **SSR** fetches, add the bundled dev-only Vite
-plugin: click **⚙ Server setup** in the panel → **Download** or **Copy** the plugin →
-add it to your `vite.config` (before `reactRouter()`), then restart the dev server.
-The `server`-tagged logs and `ssr` rows then appear automatically. Full steps are in
-the Setup dialog.
+To also see your **server** logs and **SSR** fetches locally, add the bundled
+dev-only Vite plugin: click **⚙ Server setup** in the panel → **Download** or
+**Copy** the plugin → add it to your `vite.config` (before `reactRouter()`), then
+restart the dev server. A deployed application must expose a compatible,
+authenticated same-origin stream at `<app-base>/__rr-inspector/logs`. Site access
+enables the browser bridge, but does not expose server stdout by itself.
 
 ## Updating
 
