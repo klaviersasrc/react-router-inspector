@@ -11,6 +11,11 @@
   "minimum_chrome_version": "102",
   "devtools_page": "devtools.html",
   "background": { "service_worker": "src/background.js" },
+  "permissions": ["scripting"],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
   "host_permissions": [
     "http://localhost/*",
     "https://localhost/*",

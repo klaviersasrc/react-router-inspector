@@ -1,6 +1,6 @@
 # React Router Inspector — Privacy Policy
 
-_Effective date: 11 August 2026_
+_Effective date: 2 September 2026_
 
 React Router Inspector is a Chrome DevTools extension for developers. The short
 version: **it does not collect, store, transmit, or sell any data.** Everything it
@@ -34,16 +34,19 @@ leave your machine.
 
 ## Host access
 
-The extension's content scripts run only on local development hosts
-(`localhost`, `127.0.0.1`, `*.localhost`). They read page state to display it and
-never modify the pages you visit.
+The extension's content scripts run automatically only on local development hosts
+(`localhost`, `127.0.0.1`, `*.localhost`). For any other HTTP(S) site, the user must
+explicitly click **Enable this site** in the DevTools panel and approve access to
+that exact origin. The extension reads page state to display it and never modifies
+the pages you visit.
 
 ## The optional developer plugin
 
-The optional, development-only Vite plugin streams your local dev server's console
-output and server-side `fetch` calls to the panel over a same-origin connection on
-your own machine. That data is displayed in the panel and is never sent anywhere
-else.
+The optional server bridge streams request-scoped server events and server-side
+`fetch` calls to the panel over a same-origin connection. Local development uses
+the Vite bridge; deployed environments may expose the same stream behind their
+existing authenticated application session. That data is displayed in the panel
+and is never sent anywhere else.
 
 ## Changes
 

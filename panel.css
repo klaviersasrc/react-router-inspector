@@ -51,6 +51,12 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 #toolbar #filter::placeholder { color: var(--fg-dim); }
 #setupBtn { margin-left: 2px; }
 .badge { color: var(--fg-dim); font-size: 11px; padding: 1px 6px; border: 1px solid var(--border); border-radius: 10px; }
+.site-access.needs-access { color: var(--action) !important; border-color: var(--action) !important; }
+.site-access.enabled { color: var(--accent) !important; border-color: var(--accent) !important; cursor: default !important; }
+.site-access.error { color: var(--err) !important; border-color: var(--err) !important; }
+.server-connected { color: var(--accent); border-color: var(--accent); }
+.server-reconnecting { color: var(--action); border-color: var(--action); }
+.server-unavailable { color: var(--err); border-color: var(--err); }
 
 /* Server-setup overlay */
 #setup { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
@@ -64,6 +70,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 #setupClose { background: none; border: none; color: var(--fg-dim); cursor: pointer; font-size: 15px; }
 .setup-body { padding: 16px; overflow: auto; }
 .setup-body p { margin: 0 0 12px; color: var(--fg); }
+.server-diagnostic { margin: 0 0 12px; padding: 8px 10px; color: var(--fg-dim);
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px;
+  overflow-wrap: anywhere; }
 .setup-body ol { margin: 0 0 14px; padding-left: 20px; }
 .setup-body li { margin: 0 0 10px; }
 .setup-body code { font-family: Menlo, monospace; background: var(--bg-3); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border); }

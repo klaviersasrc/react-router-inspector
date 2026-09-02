@@ -7,7 +7,9 @@
     <button id="clear" title="Clear">Clear</button>
     <label class="chk"><input type="checkbox" id="preserve" checked /> Preserve</label>
     <label class="chk" title="Capture console logs (incl. SSR/hydration). Turn off for a pristine console + stack traces."><input type="checkbox" id="captureConsole" checked /> Logs</label>
+    <button id="siteAccess" class="site-access" hidden>Enable this site</button>
     <button id="setupBtn" title="How to capture server logs &amp; SSR calls">⚙ Server setup</button>
+    <span id="serverStatus" class="badge server-waiting" title="Server bridge status">server: waiting</span>
     <span id="mode" class="badge" title="Detected data source">detecting…</span>
     <input id="filter" type="search" placeholder="Filter events &amp; logs…" />
   </header>
@@ -54,11 +56,13 @@
         <button id="setupClose" title="Close">✕</button>
       </header>
       <div class="setup-body">
-        <p>The panel already shows everything browser-side. To also see your <b>server</b>
-          logs and <b>SSR</b> fetches, add this dev-only Vite plugin to your app — it
-          streams the server side into this panel. It only runs in dev.</p>
+        <p>The panel already shows browser-side network traffic on every inspected
+          site. The live router bridge requires per-site access. Server logs and
+          <b>SSR</b> fetches additionally require the application server to expose a
+          compatible same-origin SSE bridge.</p>
+        <div id="serverDiagnostic" class="server-diagnostic">Waiting for the page bridge…</div>
         <ol>
-          <li>Save the plugin into your project (e.g. <code>tools/vite-plugin-rr-inspector.mjs</code>) — <b>Download</b> below, or <b>Copy</b> the code.</li>
+          <li>For local development, save the plugin into your project (e.g. <code>tools/vite-plugin-rr-inspector.mjs</code>) — <b>Download</b> below, or <b>Copy</b> the code.</li>
           <li>Add it to your <code>vite.config</code>, before <code>reactRouter()</code>:
             <pre class="setup-snippet">import rrInspector from './tools/vite-plugin-rr-inspector.mjs';
 
@@ -67,6 +71,9 @@ export default defineConfig({
 });</pre>
           </li>
           <li>Restart the dev server. Server logs (tagged <b>server</b>) and <b>ssr</b> rows appear automatically.</li>
+          <li>For a deployed environment, expose the same event stream at
+            <code>&lt;app-base&gt;/__rr-inspector/logs</code>. Site access enables
+            the browser bridge, but cannot expose server stdout by itself.</li>
         </ol>
         <div class="setup-actions">
           <button id="pluginDownload" class="primary">⬇ Download plugin (.mjs)</button>
@@ -80,4 +87,5 @@ export default defineConfig({
 </div>
 <script type="module" src="src/turbo-init.mjs"></script>
 <script src="src/json-tree.js"></script>
+<script src="src/site-access.js"></script>
 <script src="src/panel.js"></script>

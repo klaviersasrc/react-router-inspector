@@ -159,7 +159,8 @@ How it works is in [`docs/TECHNICAL.md`](TECHNICAL.md).
 |---------|-----|
 | No **React Router** tab | DevTools was open before the extension loaded — close & reopen DevTools. |
 | Panel empty on load | Framework mode SSRs the first page (no `.data` request). **Navigate** (change a filter) to see traffic, or rely on the bridge's initial-load event. |
-| No `server` logs / `ssr` rows | The Vite plugin isn't running: confirm `rrInspector()` is in the `plugins` array (not just imported) and **restart** the dev server. Test the stream directly: open `https://<host>/<base>/__rr-inspector/logs` — it should hang on `: rr-inspector connected`. |
+| Panel says **network decode** on a deployed site | Click **Enable this site**, approve access to the exact origin, and let the panel reload the page. |
+| No `server` logs / `ssr` rows | Check the server-status badge. For local development, confirm `rrInspector()` is in the Vite `plugins` array and restart the dev server. For a deployed app, the server must expose a compatible SSE bridge. Open `https://<host>/<base>/__rr-inspector/logs`; it should remain pending and start with `: router-inspector connected`. |
 | Server logs vanish on navigation | Turn **Preserve** on (it's the default). |
 | Console shows a count but no rows | You're on an old build — reload the extension. |
 | `injected.js` in a stack trace | That's the console-capture passthrough, not an error. Toggle **Logs** off for pristine stacks. |

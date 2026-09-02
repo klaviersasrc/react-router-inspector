@@ -89,15 +89,18 @@ Does not collect, store, or transmit any data. Everything stays on your machine.
 > network and SSR API calls, and console logs) for React Router developers.
 
 **Permission justifications:**
-- `host_permissions` + content scripts scoped to **local dev hosts only**
+- Required `host_permissions` + static content scripts are scoped to **local
+  development hosts only**
   (`http://localhost/*`, `https://localhost/*`, `http://127.0.0.1/*`,
   `https://127.0.0.1/*`, `http://*.localhost/*`, `https://*.localhost/*`, any port).
-  React Router apps run on localhost during development; the extension injects a
-  read-only bridge there to read router state and relay the dev server's log
-  stream. It only reads; it never modifies pages. (Browser-side network decoding
-  uses the DevTools network API and needs no host permission, so it still works on
-  any inspected origin.) If a developer's dev server runs on a custom host, they can
-  widen the matches in the manifest — but localhost covers the vast majority.
+  The broad HTTP(S) patterns are declared under `optional_host_permissions`, so a
+  developer can click **Enable this site** and approve only the exact deployed
+  origin they are currently inspecting. The extension then dynamically registers
+  the same read-only bridge for that origin. Browser-side network decoding uses the
+  DevTools network API and needs no host permission, so it works on every inspected
+  origin even before access is granted.
+- `scripting` — registers the bridge on a user-approved deployed origin. It is
+  never used until the user grants optional host access from the DevTools panel.
 - `devtools_page` — to add the panel. (Not a listed permission; declared directly.)
 - **Remove `storage`** — the code uses page `localStorage`, not `chrome.storage`,
   so the `storage` permission is unused. Delete it from `manifest.json` before
