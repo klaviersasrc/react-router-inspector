@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "React Router Inspector",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Inspect React Router loader/action data flow — payloads and response bodies, per route, decoded.",
   "icons": {
     "16": "icons/icon16.png",
