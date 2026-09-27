@@ -90,7 +90,11 @@
       location: state.location
         ? state.location.pathname + state.location.search
         : location.pathname + location.search,
-      matches: (state.matches || []).map((m) => m.route && m.route.id).filter(Boolean),
+      // Rich per-match info for the Routes view: id + pathname + params (loaderData
+      // is keyed by route id and sent separately, so the panel joins them).
+      matches: (state.matches || [])
+        .filter((m) => m && m.route && m.route.id)
+        .map((m) => ({ id: m.route.id, pathname: m.pathname, params: m.params || null })),
       loaderData: sanitize(state.loaderData ?? null, new WeakSet()),
       actionData: sanitize(state.actionData ?? null, new WeakSet()),
       errors: sanitize(state.errors ?? null, new WeakSet()),
@@ -109,9 +113,22 @@
     post(snapshot(r.state, "rr-initial"));
     lastKey = (r.state.location && r.state.location.key) || "";
 
+    let pendingStart = false;
     r.subscribe((state) => {
-      // Only emit settled states (navigation finished), once per navigation/action.
-      if (state.navigation && state.navigation.state !== "idle") return;
+      const navState = state.navigation && state.navigation.state;
+      // A navigation began (loading/submitting): stamp its start time ONCE, so the
+      // panel can group the loader fetches that fire during it — they timestamp
+      // before this navigation settles into "idle" below.
+      if (navState && navState !== "idle") {
+        if (!pendingStart) {
+          pendingStart = true;
+          const loc = state.navigation.location;
+          post({ type: "rr-nav-start", time: now(), location: loc ? loc.pathname + loc.search : (location.pathname + location.search) });
+        }
+        return;
+      }
+      pendingStart = false;
+      // Settled: emit once per navigation/action.
       const key = (state.location && state.location.key) || "";
       if (key === lastKey && !state.actionData) return;
       lastKey = key;

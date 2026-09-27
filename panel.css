@@ -4,6 +4,9 @@
   --bg-3: #2d2d2d;
   --border: #3c3c3c;
   --fg: #d4d4d4;
+  --fg-bright: #f4f4f5; /* high-contrast text (near-white on dark) for toolbar/controls */
+  --control-bg: #3a3a3d; /* clean control fill — lighter than the dark toolbar */
+  --control-bd: #55555b;
   --fg-dim: #858585;
   --accent: #4ec9b0;
   --loader: #4fc1ff;
@@ -15,15 +18,23 @@
   --bool: #569cd6;
   --null: #808080;
   --sel: #094771;
+  /* Category colors — shared by row tags and the kind-filter chips. */
+  --k-data: var(--accent);
+  --k-api: #6a9955;
+  --k-ssr: #c586c0;
+  --k-router: #c586c0;
+  --k-graphql: #e356a7;
   font: 14px/1.5 -apple-system, "Segoe UI", Menlo, monospace;
 }
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #fff; --bg-2: #f3f3f3; --bg-3: #e8e8e8; --border: #ddd;
-    --fg: #1e1e1e; --fg-dim: #6a6a6a; --sel: #cfe3ff;
+    --fg: #1e1e1e; --fg-bright: #101012; --fg-dim: #6a6a6a; --sel: #cfe3ff;
+    --control-bg: #ffffff; --control-bd: #dcdce1; /* clean white controls on the light toolbar */
     --key: #0451a5; --str: #a31515; --num: #098658; --bool: #0000ff; --null: #808080;
     /* accent colors need darkening for contrast on white */
     --accent: #12876f; --loader: #0b6fc4; --action: #a16207; --err: #c0392b;
+    --k-api: #3f7f2f; --k-ssr: #9a5fb0; --k-router: #9a5fb0; --k-graphql: #c02f8a;
   }
 }
 * { box-sizing: border-box; }
@@ -31,26 +42,58 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 #app { display: flex; flex-direction: column; height: 100vh; }
 
 #toolbar {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 6px;
-  padding: 5px 8px; background: var(--bg-2);
-  border-bottom: 1px solid var(--border); flex: 0 0 auto;
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap; row-gap: 6px;
+  padding: 6px 10px; flex: 0 0 auto;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
 }
 .brand {
-  font-weight: 700; color: var(--bg); background: var(--accent);
-  border-radius: 3px; padding: 1px 5px; letter-spacing: .5px;
+  font-weight: 800; color: #fff; letter-spacing: .6px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--loader)));
+  border-radius: 6px; padding: 2px 7px;
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--accent) 45%, transparent);
 }
-#toolbar button, #toolbar .chk { color: var(--fg); background: none; border: 1px solid var(--border); border-radius: 3px; padding: 2px 8px; cursor: pointer; }
-#toolbar .chk { display: inline-flex; align-items: center; gap: 4px; }
+/* Soft glass buttons: no hard border at rest, translucent fill, accent on hover. */
+#toolbar button, #toolbar .chk {
+  color: var(--fg-bright); background: var(--control-bg);
+  border: 1px solid var(--control-bd); border-radius: 7px; padding: 3px 10px; cursor: pointer;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+#toolbar button:hover { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--control-bg)); }
+/* Thin group separators. */
+.tb-sep { flex: 0 0 auto; width: 1px; align-self: stretch; margin: 3px 3px; background: var(--border); }
+/* Preserve / Logs as toggle-chips (native checkbox hidden; label toggles it). */
+#toolbar .chk { display: inline-flex; align-items: center; border-radius: 999px; }
+#toolbar .chk input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+#toolbar .chk:has(input:checked) {
+  color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--control-bg));
+}
+/* Icon-only toolbar buttons (Clear / Export / Import) — borderless like the tab
+   icons: no fill/border at rest, a soft accent wash on hover. Tooltip via title. */
+#toolbar .icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; background: none; border-color: transparent; color: var(--fg-dim); border-radius: 6px; }
+#toolbar .icon-btn:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); border-color: transparent; }
+#toolbar .icon-btn svg { display: block; }
+/* Server-setup: icon + label. */
+#setupBtn { display: inline-flex; align-items: center; gap: 5px; }
+#setupBtn svg { display: block; }
 #toolbar #filter {
   margin-left: auto; flex: 1 1 200px; min-width: 150px;
-  background: var(--bg-3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238aa39d' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.3'/%3E%3Cpath d='M10.5 10.5 14 14'/%3E%3C/svg%3E") no-repeat 8px center;
-  background-size: 13px; border: 1px solid var(--border); color: var(--fg);
-  border-radius: 4px; padding: 4px 8px 4px 26px; font: inherit;
+  background: var(--control-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238aa39d' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.3'/%3E%3Cpath d='M10.5 10.5 14 14'/%3E%3C/svg%3E") no-repeat 9px center;
+  background-size: 13px; border: 1px solid var(--control-bd); color: var(--fg-bright);
+  border-radius: 8px; padding: 5px 10px 5px 28px; font: inherit;
+  transition: background .12s ease, box-shadow .12s ease;
 }
-#toolbar #filter:focus { outline: none; border-color: var(--accent); }
+#toolbar #filter:focus { outline: none; border-color: var(--accent); background-color: var(--control-bg); box-shadow: inset 0 0 0 1px var(--accent); }
 #toolbar #filter::placeholder { color: var(--fg-dim); }
+/* One-line hint shown under the toolbar when the filter uses field tokens. */
+.filter-hint { padding: 3px 10px; font-size: 11px; color: var(--fg-dim); background: var(--bg-2); border-bottom: 1px solid var(--border); }
+.filter-hint[hidden] { display: none; }
 #setupBtn { margin-left: 2px; }
-.badge { color: var(--fg-dim); font-size: 11px; padding: 1px 6px; border: 1px solid var(--border); border-radius: 10px; }
+/* Status pills (server / mode / site access): glass + a live status dot. */
+.badge { display: inline-flex; align-items: center; gap: 5px; color: var(--fg-dim); font-size: 11px; padding: 2px 9px 2px 8px; border: 1px solid var(--border); border-radius: 999px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.badge::before, .site-access::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 5px color-mix(in srgb, currentColor 65%, transparent); }
+.site-access { display: inline-flex; align-items: center; gap: 5px; }
 .site-access.needs-access { color: var(--action) !important; border-color: var(--action) !important; }
 .site-access.enabled { color: var(--accent) !important; border-color: var(--accent) !important; cursor: default !important; }
 .site-access.error { color: var(--err) !important; border-color: var(--err) !important; }
@@ -86,16 +129,47 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 .badge.bridge { color: var(--accent); border-color: var(--accent); }
 .badge.network { color: var(--loader); border-color: var(--loader); }
 
+/* Vertical stack: main content (list + detail) over the optional console pane. */
+#main { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
 #split { display: flex; flex: 1 1 auto; min-height: 0; }
-#list { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 0 0 42%; min-width: 120px; }
-#resizer { flex: 0 0 6px; cursor: col-resize; background: var(--border); position: relative; }
-#resizer::after { content: ""; position: absolute; inset: 0 -3px; }
+#consoleResizer { flex: 0 0 1px; cursor: row-resize; background: var(--border); position: relative; }
+#consoleResizer[hidden] { display: none; }
+#consoleResizer::after { content: ""; position: absolute; inset: -4px 0; } /* wide invisible grab zone */
+#consoleResizer:hover, #consoleResizer.dragging { background: var(--accent); }
+body.row-resizing { cursor: row-resize; user-select: none; }
+body.row-resizing iframe { pointer-events: none; }
+#consolePane { flex: 0 0 auto; flex-basis: 45%; min-height: 80px; display: flex; flex-direction: column; background: var(--bg); }
+#consolePane[hidden] { display: none; }
+#consoleHead { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 4px 10px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.console-title { font: 700 10px/1 -apple-system, "Segoe UI", sans-serif; text-transform: uppercase; letter-spacing: .4px; color: var(--fg-dim); }
+#consoleClose { display: inline-flex; align-items: center; justify-content: center; background: none; border: none; color: var(--fg-dim); cursor: pointer; padding: 3px; border-radius: 5px; }
+#consoleClose:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
+#consoleClose svg { display: block; }
+#consoleBody { flex: 1 1 auto; overflow: auto; padding: 0 10px 6px; }
+/* Console toolbar toggle + count badge. */
+#consoleToggle { display: inline-flex; align-items: center; gap: 5px; }
+#consoleToggle.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 14%, var(--control-bg)); }
+#consoleToggle svg { display: block; }
+#consoleToggle .count { background: var(--err); color: #fff; border-radius: 7px; font: 700 9px/1 -apple-system, "Segoe UI", sans-serif; padding: 2px 4px; min-width: 14px; text-align: center; box-sizing: border-box; }
+#consoleToggle .count:empty { display: none; }
+#listCol { flex: 0 0 42%; min-width: 120px; display: flex; flex-direction: column; min-height: 0; }
+#list { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1 1 auto; }
+/* Call-type filter bar above the event list. */
+.kind-filter { display: flex; flex-wrap: wrap; gap: 5px; padding: 5px 8px; background: var(--bg); border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+.kind-filter:empty { display: none; }
+#resizer { flex: 0 0 1px; cursor: col-resize; background: var(--border); position: relative; }
+#resizer::after { content: ""; position: absolute; inset: 0 -4px; } /* wide invisible grab zone */
 #resizer:hover, #resizer.dragging { background: var(--accent); }
 body.col-resizing { cursor: col-resize; user-select: none; }
 body.col-resizing iframe { pointer-events: none; }
 #list li { padding: 5px 8px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 7px; align-items: baseline; font-size: 12px; }
+/* Collapsed group members: the hidden attribute must beat the flex rule above. */
+#list li[hidden] { display: none; }
 #list li:hover { background: var(--bg-2); }
 #list li.sel { background: var(--sel); }
+/* Keyboard focus: the list is focusable; show the selected row's rail when it is. */
+#list:focus { outline: none; }
+#list:focus-visible li.sel { box-shadow: inset 2px 0 0 var(--accent); }
 #list li .tag { flex: 0 0 auto; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 1px 4px; border-radius: 3px; color: var(--bg); }
 #list li .tag-data { background: var(--accent); }
 #list li .tag-router { background: #c586c0; }
@@ -108,13 +182,78 @@ body.col-resizing iframe { pointer-events: none; }
 #list li .route { color: var(--fg); flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #list li .meta { color: var(--fg-dim); flex: 0 0 auto; }
 #list li.err .route { color: var(--err); }
+/* Group-by-navigation: header rows carry a twisty; members indent under them. */
+#list li .gtw { flex: 0 0 auto; width: 16px; text-align: center; color: var(--fg); cursor: pointer; font-size: 11px; font-weight: 700; user-select: none; border-radius: 3px; }
+#list li .gtw:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, transparent); }
+#list li.group-head { background: color-mix(in srgb, var(--accent) 9%, transparent); font-weight: 600; }
+#list li.nested { padding-left: 22px; }
+#list li.nested .route { color: var(--fg-dim); }
+.chip.group { --chip-c: var(--accent); }
+.chip.group.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent); opacity: 1; }
+/* Status code colored by class; duration/size in tabular figures so columns align. */
+#list li .status { flex: 0 0 30px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--fg-dim); }
+/* Duration + size as aligned right-hand columns. */
+#list li .col-dur { flex: 0 0 58px; text-align: right; color: var(--fg-dim); font-variant-numeric: tabular-nums; }
+#list li .col-size { flex: 0 0 62px; text-align: right; color: var(--fg-dim); font-variant-numeric: tabular-nums; }
+#list li .status.s2 { color: var(--accent); }
+#list li .status.s3 { color: var(--loader); }
+#list li .status.s4 { color: var(--action); }
+#list li .status.s5 { color: var(--err); }
+#list li .meta { font-variant-numeric: tabular-nums; }
+/* Empty state: guidance, not a clickable row. */
+#list li.empty { display: block; cursor: default; color: var(--fg-dim); text-align: center; padding: 18px 12px; border-bottom: none; line-height: 1.5; }
+#list li.empty:hover { background: none; }
+/* "Errors N" is an inverse toggle: .on = showing failures only. */
+.chip.errors { --chip-c: var(--err); }
+.chip.errors.on { color: var(--err); background: color-mix(in srgb, var(--err) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--err) 40%, transparent); opacity: 1; }
+/* Status badges are clickable (open setup + diagnostic). */
+#mode, #serverStatus { cursor: pointer; }
+
+/* Detail summary header: one compact request line above the tabs. */
+.summary { display: flex; align-items: baseline; gap: 8px; padding: 6px 10px; background: var(--bg-2); border-bottom: 1px solid var(--border); font-size: 12px; min-width: 0; }
+.summary[hidden] { display: none; }
+.summary .tag { flex: 0 0 auto; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 1px 4px; border-radius: 3px; color: var(--bg); }
+.summary .tag-data { background: var(--accent); }
+.summary .tag-router { background: #c586c0; }
+.summary .tag-graphql { background: #e356a7; }
+.summary .tag-api { background: #6a9955; }
+.summary .tag-ssr { background: #c586c0; }
+.summary .method { flex: 0 0 auto; font-weight: 700; }
+.summary .method.get { color: var(--loader); }
+.summary .method.post { color: var(--action); }
+.summary .path { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Menlo, monospace; color: var(--fg); }
+.summary .status { flex: 0 0 auto; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--fg-dim); }
+.summary .status.s2 { color: var(--accent); }
+.summary .status.s3 { color: var(--loader); }
+.summary .status.s4 { color: var(--action); }
+.summary .status.s5 { color: var(--err); }
+.summary .meta { flex: 0 0 auto; color: var(--fg-dim); font-variant-numeric: tabular-nums; }
+.summary .chip { flex: 0 0 auto; }
 
 #detail { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
-#tabs { display: flex; gap: 1px; background: var(--bg-2); border-bottom: 1px solid var(--border); flex: 0 0 auto; overflow: visible; }
+#tabs { display: flex; gap: 1px; background: var(--bg); border-bottom: 1px solid var(--border); flex: 0 0 auto; overflow: visible; }
 #tabs button { position: relative; display: inline-flex; align-items: center; justify-content: center; background: none; border: none; border-bottom: 2px solid transparent; color: var(--fg-dim); padding: 6px 11px; cursor: pointer; line-height: 0; transition: color .12s, background .12s; }
 #tabs button:hover { color: var(--fg); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 #tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
 #tabs button svg { display: block; }
+/* Find-in-pane box, right-aligned in the tab bar. */
+#tabs .find-wrap { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; }
+#tabs #find { width: 150px; background: var(--control-bg); border: 1px solid var(--control-bd); color: var(--fg-bright); border-radius: 6px; padding: 3px 8px; font: inherit; font-size: 11px; }
+#tabs #find:focus { outline: none; border-color: var(--accent); }
+#tabs #find::placeholder { color: var(--fg-dim); }
+#tabs .find-count { color: var(--fg-dim); font-size: 11px; font-variant-numeric: tabular-nums; min-width: 2.5em; }
+/* Find hits: highlighted rows, current hit outlined. */
+.jt .row.hit { background: color-mix(in srgb, var(--action) 18%, transparent); border-radius: 3px; }
+.jt .row.cur { outline: 1px solid var(--action); outline-offset: -1px; }
+/* Loader-data diff: added / changed / removed rows, and the "was …" hint. */
+.jt .row.d-added { background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 3px; }
+.jt .row.d-changed { background: color-mix(in srgb, var(--action) 18%, transparent); border-radius: 3px; }
+.jt .row.d-removed { background: color-mix(in srgb, var(--err) 15%, transparent); border-radius: 3px; }
+.jt .row.d-removed > .k, .jt .row.d-removed > .s, .jt .row.d-removed > .n, .jt .row.d-removed > .b, .jt .row.d-removed > .nul { text-decoration: line-through; opacity: .8; }
+.jt .row .d-was { color: var(--fg-dim); font-style: italic; margin-left: 4px; }
+.diff-sum { color: var(--fg-dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+/* Marks the exact spot a capped/truncated body was cut off. */
+.jt .trunc-mark { color: var(--err); font-weight: 700; background: color-mix(in srgb, var(--err) 15%, transparent); border: 1px solid color-mix(in srgb, var(--err) 40%, transparent); border-radius: 4px; padding: 0 6px; }
 /* icon-tab tooltip */
 #tabs button[data-tip]::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%) translateY(-2px); white-space: nowrap; font: 600 11px/1 -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: var(--bg-3); border: 1px solid var(--border); border-radius: 5px; padding: 4px 7px; box-shadow: 0 4px 12px rgba(0,0,0,.28); opacity: 0; pointer-events: none; z-index: 20; transition: opacity .12s, transform .12s; }
 #tabs button[data-tip]::before { content: ""; position: absolute; top: calc(100% + 1px); left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-bottom-color: var(--border); opacity: 0; pointer-events: none; z-index: 20; transition: opacity .12s; }
@@ -133,11 +272,30 @@ body.col-resizing iframe { pointer-events: none; }
 .trunc-banner strong { color: var(--err); }
 
 /* Console view */
-.log-filters { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 5px 2px; margin: -8px -10px 6px; padding-left: 10px; background: var(--bg); border-bottom: 1px solid var(--border); }
+.log-filters { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 5px 2px; margin: 0 -10px 6px; padding-left: 10px; background: var(--bg); border-bottom: 1px solid var(--border); }
 .log-filters-sep { width: 1px; align-self: stretch; background: var(--border); margin: 1px 4px; }
-.chip { font: 700 10px/1.4 -apple-system, "Segoe UI", sans-serif; text-transform: uppercase; letter-spacing: .3px; color: var(--fg); background: var(--bg-3); border: 1px solid var(--border); border-radius: 10px; padding: 1px 7px; cursor: pointer; }
-.chip:hover { border-color: var(--accent); }
+.chip { font: 700 10px/1.4 -apple-system, "Segoe UI", sans-serif; text-transform: uppercase; letter-spacing: .3px; color: var(--fg-bright); background: color-mix(in srgb, var(--fg) 7%, transparent); border: 1px solid transparent; border-radius: 999px; padding: 2px 9px; cursor: pointer; transition: background .12s ease, color .12s ease, box-shadow .12s ease, opacity .12s ease; }
+.chip:hover { color: var(--accent); }
 .chip.off { opacity: .4; text-decoration: line-through; }
+/* Kind-filter chips carry their category color (dot always on; body tinted when active). */
+.kind-filter .chip { display: inline-flex; align-items: center; gap: 6px; }
+.kind-filter .chip::before { content: ""; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--chip-c, var(--fg-dim)); box-shadow: 0 0 4px color-mix(in srgb, var(--chip-c, transparent) 60%, transparent); }
+.kchip.k-data { --chip-c: var(--k-data); }
+.kchip.k-api { --chip-c: var(--k-api); }
+.kchip.k-ssr { --chip-c: var(--k-ssr); }
+.kchip.k-router { --chip-c: var(--k-router); }
+.kchip.k-graphql { --chip-c: var(--k-graphql); }
+.kchip:not(.off) { color: var(--chip-c); background: color-mix(in srgb, var(--chip-c) 13%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip-c) 34%, transparent); }
+/* Raw tab action bar (Pretty-print toggle). */
+.raw-actions, .pane-actions { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+/* Raw word-wrap off → horizontal scroll instead of wrapping. */
+.jt.nowrap { white-space: pre; overflow-x: auto; }
+.chip.ok { color: var(--accent); border-color: var(--accent); }
+/* Hover-copy button at the end of every JSON tree row. */
+.jt .row .cp { position: absolute; right: 2px; top: 1px; z-index: 1; font-size: 11px; line-height: 1; padding: 1px 4px; border: 1px solid transparent; border-radius: 3px; background: var(--bg); color: var(--fg-dim); cursor: pointer; opacity: 0; }
+.jt .row:hover .cp { opacity: 1; }
+.jt .row .cp:hover { color: var(--accent); border-color: var(--border); }
+.jt .row .cp.ok { opacity: 1; color: var(--accent); }
 #tabs .count { position: absolute; top: 1px; right: 1px; min-width: 13px; height: 13px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 700 9px/1 -apple-system, "Segoe UI", sans-serif; background: var(--err); color: #fff; border-radius: 7px; padding: 0 3px; pointer-events: none; }
 /* when Console is the active tab its count sits inline after the label, not in the corner */
 #tabs button.active .count { position: static; top: auto; right: auto; margin-left: 5px; }
@@ -158,7 +316,7 @@ body.col-resizing iframe { pointer-events: none; }
 
 /* JSON tree */
 .jt { font-family: Menlo, monospace; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-.jt .row { cursor: default; }
+.jt .row { cursor: default; position: relative; }
 .jt .tw { user-select: none; }
 .jt .k { color: var(--key); }
 .jt .s { color: var(--str); }
@@ -175,6 +333,8 @@ body.col-resizing iframe { pointer-events: none; }
 .jt .preview { cursor: pointer; }
 .jt .preview:hover { color: var(--accent); }
 .jt .row:hover > .tw:not(:empty) { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+/* Expanded body of a collapsible long/multi-line string (e.g. a GraphQL query). */
+.jt .strval { display: block; color: var(--str); margin: 2px 0 5px; padding-top: 1px; }
 /* Console: the clickable summary line of a collapsed multi-line entry */
 .log:has(.log-tw) .log-msg { cursor: pointer; border-radius: 3px; padding: 0 3px; }
 .log:has(.log-tw) .log-msg:hover { background: color-mix(in srgb, var(--accent) 13%, transparent); }

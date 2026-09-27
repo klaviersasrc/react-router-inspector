@@ -4,171 +4,327 @@
 <meta charset="utf-8" />
 <title>React Router Inspector — store screenshots (1280×800)</title>
 <style>
+  /* Palette mirrors panel.css v1.0.10 (VS Code dark base). */
   :root {
-    --bg: #0d1513; --surface: #131c1a; --surface-2: #182220; --border: #26332f;
-    --text: #dae4e0; --dim: #8aa39d; --faint: #5f7570; --accent: #4ec9b0;
-    --router: #c586c0; --data: #4ec9b0; --gql: #e356a7; --api: #7cb96b; --ssr: #c586c0;
-    --str: #ce9178; --num: #b5cea8; --key: #9cdcfe; --bool: #569cd6; --err: #f48771; --warnc: #dcdcaa;
+    --bg: #1e1e1e; --bg-2: #252526; --bg-3: #2d2d2d; --border: #3c3c3c;
+    --fg: #d4d4d4; --fg-bright: #f4f4f5; --fg-dim: #858585;
+    --control-bg: #3a3a3d; --control-bd: #55555b; --sel: #094771;
+    --accent: #4ec9b0; --loader: #4fc1ff; --action: #dcdcaa; --err: #f48771;
+    --key: #9cdcfe; --str: #ce9178; --num: #b5cea8; --bool: #569cd6; --null: #808080;
+    --k-data: #4ec9b0; --k-api: #6a9955; --k-ssr: #c586c0; --k-router: #c586c0; --k-gql: #e356a7;
+    --add: #6a9955; --chg: #dcdcaa; --rem: #f48771;
     --sans: -apple-system, "Segoe UI", system-ui, sans-serif;
     --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: #050908; font-family: var(--sans); }
+  body { margin: 0; background: #0b0b0c; font-family: var(--sans); }
+
   /* Each .shot is EXACTLY a Chrome Web Store screenshot: 1280 x 800 */
   .shot { width: 1280px; height: 800px; margin: 0 auto; position: relative; overflow: hidden;
-    background: radial-gradient(120% 120% at 12% 0%, #16211e 0%, #0d1513 55%, #0a110f 100%);
-    display: flex; flex-direction: column; padding: 64px 72px; }
+    background: radial-gradient(120% 120% at 12% 0%, #26302e 0%, #171a1a 52%, #101314 100%);
+    display: flex; flex-direction: column; padding: 60px 72px; }
   .shot + .shot { margin-top: 28px; }
-  .cap { margin-bottom: 26px; }
+  .cap { margin-bottom: 24px; }
   .eyebrow { font-family: var(--mono); font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
-  .cap h2 { margin: 0; color: var(--text); font-size: 40px; line-height: 1.08; font-weight: 800; letter-spacing: -.02em; max-width: 22ch; }
+  .cap h2 { margin: 0; color: #eef3f1; font-size: 40px; line-height: 1.08; font-weight: 800; letter-spacing: -.02em; max-width: 24ch; }
   .cap h2 b { color: var(--accent); font-weight: 800; }
-  .brand { position: absolute; top: 30px; right: 40px; display: inline-flex; align-items: center; gap: 9px; color: var(--dim); font-size: 14px; font-weight: 600; }
-  .rr { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: var(--accent); color: #0d1513; font-family: var(--mono); font-weight: 800; font-size: 12px; }
+  .brand { position: absolute; top: 30px; right: 40px; display: inline-flex; align-items: center; gap: 9px; color: #9fb3ad; font-size: 14px; font-weight: 600; }
+  .rr { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: var(--accent); color: #10201c; font-family: var(--mono); font-weight: 800; font-size: 12px; }
 
-  .panel { flex: 1; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface);
-    box-shadow: 0 30px 70px -30px rgba(0,0,0,.7); font-family: var(--mono); font-size: 13px; display: flex; flex-direction: column; }
-  .chrome { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); color: var(--dim); }
-  .dots { display: flex; gap: 6px; margin-right: 4px; } .dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--border); }
-  .tabs { display: flex; gap: 4px; } .tabs span { padding: 3px 10px; border-radius: 6px 6px 0 0; color: var(--faint); }
-  .tabs span.on { color: var(--text); border-bottom: 2px solid var(--accent); }
-  .split { display: grid; grid-template-columns: 1.05fr 1.3fr; flex: 1; min-height: 0; }
-  .list { border-right: 1px solid var(--border); overflow: hidden; }
-  .row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); }
-  .row.sel { background: rgba(78,201,176,.12); }
-  .tag { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #0d1513; padding: 1px 5px; border-radius: 4px; }
-  .t-router { background: var(--router); } .t-data { background: var(--data); } .t-gql { background: var(--gql); } .t-api { background: var(--api); } .t-ssr { background: var(--ssr); }
-  .m { color: var(--key); font-weight: 700; } .rt { color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .st { color: var(--dim); }
+  .panel { flex: 1; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--bg);
+    box-shadow: 0 30px 70px -30px rgba(0,0,0,.75); font-family: var(--mono); font-size: 13px; display: flex; flex-direction: column; min-height: 0; }
+  .chrome { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: #111; border-bottom: 1px solid var(--border); color: var(--fg-dim); }
+  .dots { display: flex; gap: 6px; margin-right: 4px; } .dots i { width: 11px; height: 11px; border-radius: 50%; background: #333; }
+  .dtb { display: flex; gap: 4px; } .dtb span { padding: 3px 10px; border-radius: 6px 6px 0 0; color: var(--fg-dim); }
+  .dtb span.on { color: var(--fg-bright); border-bottom: 2px solid var(--accent); }
+
+  /* Flagship toolbar */
+  .tb { display: flex; align-items: center; gap: 9px; padding: 8px 12px; background: var(--bg);
+    border-bottom: 1px solid var(--border); color: var(--fg-bright); }
+  .tb .rr { width: 22px; height: 22px; font-size: 10px; border-radius: 6px; }
+  .ib { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 6px; color: var(--fg-bright); border: 0; background: transparent; }
+  .ib svg { width: 15px; height: 15px; }
+  .sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; }
+  .chk { display: inline-flex; align-items: center; gap: 5px; color: var(--fg); font-size: 12px; }
+  .box { width: 12px; height: 12px; border-radius: 3px; background: var(--accent); display: inline-grid; place-items: center; color: #10201c; font-size: 9px; font-weight: 900; }
+  .ctog { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 7px; border-radius: 7px; background: var(--control-bg); border: 1px solid var(--control-bd); color: var(--fg-bright); font-size: 12px; }
+  .ctog.on { background: color-mix(in srgb, var(--accent) 22%, var(--control-bg)); border-color: var(--accent); }
+  .ctog .cnt { background: var(--accent); color: #10201c; border-radius: 9px; padding: 0 6px; font-size: 10px; font-weight: 800; }
+  .ctog svg { width: 14px; height: 14px; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--bg-3); color: var(--fg); border: 1px solid var(--border); }
+  .badge.ok { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .badge.bridge { color: var(--loader); border-color: color-mix(in srgb, var(--loader) 45%, var(--border)); }
+  .gear { display: inline-flex; align-items: center; gap: 5px; color: var(--fg); font-size: 12px; }
+  .gear svg { width: 13px; height: 13px; }
+  .search { margin-left: auto; min-width: 220px; padding: 5px 10px; border-radius: 7px; background: var(--control-bg); border: 1px solid var(--control-bd); color: var(--fg-dim); font-family: var(--mono); font-size: 12px; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .split { display: grid; grid-template-columns: 1.02fr 1.28fr; flex: 1; min-height: 0; }
+  .listcol { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  /* type chips */
+  .kinds { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--bg-2); flex-wrap: wrap; }
+  .kchip { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 11px; border: 1px solid var(--border); color: var(--fg); }
+  .kchip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+  .kchip.off { opacity: .4; }
+  .list { overflow: hidden; }
+  /* column header */
+  .lh { display: grid; grid-template-columns: 52px 40px 1fr 42px 52px 52px; gap: 8px; padding: 6px 14px; color: var(--fg-dim); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+  .row { display: grid; grid-template-columns: 52px 40px 1fr 42px 52px 52px; gap: 8px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--border); }
+  .row.sel { background: var(--sel); }
+  .tag { justify-self: start; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #10201c; padding: 1px 6px; border-radius: 4px; }
+  .t-router { background: var(--k-router); } .t-data { background: var(--k-data); } .t-gql { background: var(--k-gql); } .t-api { background: var(--k-api); } .t-ssr { background: var(--k-ssr); }
+  .m { color: var(--key); font-weight: 700; } .rt { color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .st { color: var(--accent); text-align: right; } .st.bad { color: var(--err); } .dur, .sz { color: var(--fg-dim); text-align: right; }
   .row.bad .rt { color: var(--err); }
-  .detail { padding: 14px 16px; overflow: hidden; }
-  .dtabs { display: flex; gap: 16px; margin-bottom: 12px; color: var(--faint); border-bottom: 1px solid var(--border); padding-bottom: 9px; }
-  .dtabs b { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--accent); padding-bottom: 9px; margin-bottom: -10px; }
-  .tree { white-space: pre-wrap; line-height: 1.8; }
-  .k { color: var(--key); } .s { color: var(--str); } .n { color: var(--num); } .b { color: var(--bool); } .nul { color: var(--faint); } .tw { color: var(--faint); }
-  .filters { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface-2); flex-wrap: wrap; }
-  .fchip { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--border); color: var(--text); }
+
+  .detail { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .summary { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-bottom: 1px solid var(--border); background: var(--bg-2); color: var(--fg); }
+  .summary .mm { color: var(--key); font-weight: 700; } .summary .uu { color: var(--fg-bright); }
+  .summary .meta { color: var(--fg-dim); } .summary .copy { margin-left: auto; color: var(--fg-dim); }
+  .dtabs { display: flex; align-items: center; gap: 15px; padding: 10px 16px 9px; color: var(--fg-dim); border-bottom: 1px solid var(--border); }
+  .dtabs b { color: var(--fg-bright); font-weight: 600; border-bottom: 2px solid var(--accent); padding-bottom: 9px; margin-bottom: -10px; }
+  .dtabs .find { margin-left: auto; font-size: 11px; color: var(--fg-dim); border: 1px solid var(--control-bd); border-radius: 6px; padding: 3px 9px; background: var(--control-bg); }
+  .pane { padding: 12px 16px; overflow: hidden; flex: 1; }
+  .tree { white-space: pre-wrap; line-height: 1.85; }
+  .k { color: var(--key); } .s { color: var(--str); } .n { color: var(--num); } .b { color: var(--bool); } .nul { color: var(--fg-dim); } .tw { color: var(--fg-dim); }
+  .mk { color: var(--fg-dim); }
+  .d-add { background: color-mix(in srgb, var(--add) 22%, transparent); border-left: 2px solid var(--add); padding-left: 6px; }
+  .d-chg { background: color-mix(in srgb, var(--chg) 20%, transparent); border-left: 2px solid var(--chg); padding-left: 6px; }
+  .difftog { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--fg); border: 1px solid var(--control-bd); background: var(--control-bg); border-radius: 6px; padding: 2px 8px; margin-bottom: 10px; }
+  .difftog .cc { color: var(--fg-dim); }
+  .cbtn { display: inline-flex; gap: 8px; margin-bottom: 12px; }
+  .cbtn span { font-size: 11px; color: var(--fg); border: 1px solid var(--control-bd); background: var(--control-bg); border-radius: 6px; padding: 3px 9px; }
+  .trunc { color: var(--err); background: color-mix(in srgb, var(--err) 16%, transparent); border-radius: 4px; padding: 1px 6px; }
+
+  /* console split pane (shot 3) */
+  .cresizer { height: 1px; background: var(--border); }
+  .cpane { height: 232px; display: flex; flex-direction: column; min-height: 0; background: var(--bg); }
+  .chead { display: flex; align-items: center; padding: 7px 14px; border-bottom: 1px solid var(--border); color: var(--fg-bright); font-size: 12px; }
+  .chead .x { margin-left: auto; color: var(--fg-dim); }
+  .filters { display: flex; gap: 6px; padding: 8px 14px; flex-wrap: wrap; }
+  .fchip { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 1px 8px; border-radius: 11px; border: 1px solid var(--border); color: var(--fg); }
   .fchip.off { opacity: .38; text-decoration: line-through; }
-  .logline { display: flex; gap: 9px; align-items: baseline; padding: 6px 14px; border-bottom: 1px solid var(--border); }
-  .src { font-size: 8px; font-weight: 800; text-transform: uppercase; background: var(--api); color: #0d1513; padding: 0 4px; border-radius: 4px; }
-  .lvl { color: var(--faint); font-size: 9px; min-width: 36px; text-transform: uppercase; font-weight: 700; }
-  .lvl.e { color: var(--err); } .lvl.w { color: var(--warnc); } .lvl.i { color: var(--bool); }
-  .loc { color: var(--faint); }
+  .cbody { overflow: hidden; }
+  .logline { display: flex; gap: 9px; align-items: baseline; padding: 5px 14px; border-bottom: 1px solid var(--border); }
+  .src { font-size: 8px; font-weight: 800; text-transform: uppercase; background: var(--k-api); color: #10201c; padding: 0 4px; border-radius: 4px; }
+  .lvl { color: var(--fg-dim); font-size: 9px; min-width: 34px; text-transform: uppercase; font-weight: 700; }
+  .lvl.e { color: var(--err); } .lvl.w { color: var(--action); } .lvl.i { color: var(--bool); }
+  .loc { color: var(--fg-dim); }
 </style>
 </head>
 <body>
 
-<!-- SHOT 1 -->
+<!-- =============================== SHOT 1 =============================== -->
 <section class="shot">
   <span class="brand"><span class="rr">RR</span> React Router Inspector</span>
-  <div class="cap"><p class="eyebrow">Loader &amp; action data</p><h2>Your loader data, <b>decoded</b> — real types and all.</h2></div>
+  <div class="cap"><p class="eyebrow">Loader &amp; action data</p><h2>Your loader data, <b>decoded</b> — real types, and what changed.</h2></div>
   <div class="panel">
-    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="tabs"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
-    <div class="split">
-      <div class="list">
-        <div class="row sel"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
-        <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="dtb"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
+    <header class="tb">
+      <span class="rr">RR</span>
+      <button class="ib" title="Clear"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10"/><path d="M6.4 4.5V3.3c0-.44.36-.8.8-.8h1.6c.44 0 .8.36.8.8v1.2"/><path d="M4.7 4.5l.5 8.1c.03.42.38.74.8.74h4c.42 0 .77-.32.8-.74l.5-8.1"/><path d="M6.6 6.7v4.4M9.4 6.7v4.4"/></svg></button>
+      <button class="ib" title="Export"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v6"/><path d="M5.5 5 8 2.5 10.5 5"/><path d="M3.5 8.5v3.5a.6.6 0 0 0 .6.6h7.8a.6.6 0 0 0 .6-.6V8.5"/></svg></button>
+      <button class="ib" title="Import"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8.5v-6"/><path d="M5.5 6 8 8.5 10.5 6"/><path d="M3.5 8.5v3.5a.6.6 0 0 0 .6.6h7.8a.6.6 0 0 0 .6-.6V8.5"/></svg></button>
+      <span class="sep"></span>
+      <span class="chk"><span class="box">✓</span> Preserve</span>
+      <span class="chk"><span class="box">✓</span> Logs</span>
+      <span class="ctog"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M5 6.5 7 8.25 5 10"/><path d="M8.5 10.25h3"/></svg>Console<span class="cnt">6</span></span>
+      <span class="sep"></span>
+      <span class="gear"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2"/><path d="M8 1.6v1.8M8 12.6v1.8M1.6 8h1.8M12.6 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3"/></svg>Server setup</span>
+      <span class="badge ok">server: ok</span>
+      <span class="badge bridge">live router bridge</span>
+      <span class="search">Filter events &amp; logs…</span>
+    </header>
+    <div class="main"><div class="split">
+      <div class="listcol">
+        <div class="kinds"><span class="kchip" style="--c:var(--k-router)">router</span><span class="kchip" style="--c:var(--k-data)">data</span><span class="kchip" style="--c:var(--k-gql)">gql</span><span class="kchip" style="--c:var(--k-api)">api</span><span class="kchip" style="--c:var(--k-ssr)">ssr</span></div>
+        <div class="lh"><span></span><span></span><span>route</span><span>st</span><span>dur</span><span>size</span></div>
+        <div class="list">
+          <div class="row sel"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · load</span><span class="st">200</span><span class="dur">42ms</span><span class="sz">3.1kB</span></div>
+          <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span><span class="dur">18ms</span><span class="sz">2.4kB</span></div>
+          <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span><span class="dur">55ms</span><span class="sz">1.9kB</span></div>
+          <div class="row"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary</span><span class="st">200</span><span class="dur">214ms</span><span class="sz">6.0kB</span></div>
+          <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory</span><span class="st bad">500</span><span class="dur">—</span><span class="sz">—</span></div>
+        </div>
       </div>
       <div class="detail">
-        <div class="dtabs"><b>Loader Data</b><span>Payload</span><span>Headers</span><span>Response</span><span>Console</span></div>
-<div class="tree"><span class="tw">▾</span> { root, routes/products }
+        <div class="summary"><span class="mm">GET</span><span class="uu">/shop/products</span><span class="meta">· 200 · 42ms · 3.1 kB</span><span class="copy">⧉</span></div>
+        <div class="dtabs"><b>Loader Data</b><span>Routes</span><span>Payload</span><span>Headers</span><span>Response</span><span>Raw</span><span class="find">Find… ⌘F</span></div>
+        <div class="pane">
+          <div class="difftog">◧ Diff vs previous <span class="cc">+1 ~2 −0</span></div>
+<div class="tree"><span class="tw">▾</span> { routes/products }
   <span class="tw">▾</span> <span class="k">"routes/products"</span>: { data }
       <span class="k">category</span>: <span class="s">"widgets"</span>
-      <span class="k">inStockOnly</span>: <span class="b">true</span>
+      <span class="d-chg"><span class="k">inStockOnly</span>: <span class="b">true</span>  <span class="mk">(was false)</span></span>
+      <span class="d-chg"><span class="k">totals</span>: <span class="s">Map(2)</span> { today → <span class="n">41250.5</span> }</span>
       <span class="k">fetchedAt</span>: <span class="s">Date(2030-01-15T12:00:00Z)</span>
-      <span class="k">totals</span>: <span class="s">Map(2)</span> { today → <span class="n">41250.5</span> }
       <span class="k">catalogId</span>: <span class="n">90071992547409910n</span>
       <span class="k">note</span>: <span class="nul">undefined</span>
+      <span class="d-add"><span class="k">flashSale</span>: <span class="b">true</span>  <span class="mk">(added)</span></span>
       <span class="tw">▾</span> <span class="k">rows</span>: Array(2)
-          <span class="tw">▾</span> <span class="k">0</span>: { name: <span class="s">"Blue Widget"</span>, price: <span class="n">125</span> }</div>
+          <span class="tw">▸</span> <span class="k">0</span>: { name: <span class="s">"Blue Widget"</span>, price: <span class="n">125</span> }</div>
+        </div>
       </div>
-    </div>
+    </div></div>
   </div>
 </section>
 
-<!-- SHOT 2 -->
+<!-- =============================== SHOT 2 =============================== -->
 <section class="shot">
   <span class="brand"><span class="rr">RR</span> React Router Inspector</span>
-  <div class="cap"><p class="eyebrow">Server-side calls</p><h2>See the SSR fetches the <b>browser can't</b>.</h2></div>
+  <div class="cap"><p class="eyebrow">Route matches</p><h2>The whole matched route tree — <b>params and all</b>.</h2></div>
   <div class="panel">
-    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="tabs"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
-    <div class="split">
-      <div class="list">
-        <div class="row"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
-        <div class="row sel"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
-        <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="dtb"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
+    <header class="tb">
+      <span class="rr">RR</span>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10"/><path d="M6.4 4.5V3.3c0-.44.36-.8.8-.8h1.6c.44 0 .8.36.8.8v1.2"/><path d="M4.7 4.5l.5 8.1c.03.42.38.74.8.74h4c.42 0 .77-.32.8-.74l.5-8.1"/><path d="M6.6 6.7v4.4M9.4 6.7v4.4"/></svg></button>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v6"/><path d="M5.5 5 8 2.5 10.5 5"/><path d="M3.5 8.5v3.5a.6.6 0 0 0 .6.6h7.8a.6.6 0 0 0 .6-.6V8.5"/></svg></button>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8.5v-6"/><path d="M5.5 6 8 8.5 10.5 6"/><path d="M3.5 8.5v3.5a.6.6 0 0 0 .6.6h7.8a.6.6 0 0 0 .6-.6V8.5"/></svg></button>
+      <span class="sep"></span>
+      <span class="chk"><span class="box">✓</span> Preserve</span>
+      <span class="chk"><span class="box">✓</span> Logs</span>
+      <span class="ctog"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M5 6.5 7 8.25 5 10"/><path d="M8.5 10.25h3"/></svg>Console<span class="cnt">6</span></span>
+      <span class="sep"></span>
+      <span class="badge bridge">live router bridge</span>
+      <span class="search">Filter events &amp; logs…</span>
+    </header>
+    <div class="main"><div class="split">
+      <div class="listcol">
+        <div class="kinds"><span class="kchip" style="--c:var(--k-router)">router</span><span class="kchip" style="--c:var(--k-data)">data</span><span class="kchip" style="--c:var(--k-gql)">gql</span><span class="kchip" style="--c:var(--k-api)">api</span><span class="kchip" style="--c:var(--k-ssr)">ssr</span></div>
+        <div class="lh"><span></span><span></span><span>route</span><span>st</span><span>dur</span><span>size</span></div>
+        <div class="list">
+          <div class="row sel"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products/42</span><span class="st">200</span><span class="dur">40ms</span><span class="sz">3.3kB</span></div>
+          <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products/42.data</span><span class="st">200</span><span class="dur">16ms</span><span class="sz">2.6kB</span></div>
+          <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · Product</span><span class="st">200</span><span class="dur">51ms</span><span class="sz">1.4kB</span></div>
+          <div class="row"><span class="tag t-api">api</span><span class="m">GET</span><span class="rt">/reviews?product=42</span><span class="st">200</span><span class="dur">33ms</span><span class="sz">4.7kB</span></div>
+          <div class="row"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/pricing/42</span><span class="st">200</span><span class="dur">120ms</span><span class="sz">0.8kB</span></div>
+        </div>
       </div>
       <div class="detail">
-        <div class="dtabs"><span>Loader Data</span><span>Payload</span><b>Headers</b><span>Response</span><span>Console</span></div>
-<div class="tree"><span class="tw">▾</span> { request, response }
-  <span class="tw">▾</span> <span class="k">request</span>
-      <span class="k">content-type</span>: <span class="s">"application/json"</span>
-      <span class="k">x-request-id</span>: <span class="s">"req_8f21ac"</span>
-      <span class="k">authorization</span>: <span class="s">"Bearer demo.jwt.token…"</span>
-  <span class="tw">▾</span> <span class="k">response</span>
-      <span class="k">content-type</span>: <span class="s">"application/json; charset=utf-8"</span>
-      <span class="k">cache-control</span>: <span class="s">"no-store"</span>
-      <span class="k">x-request-id</span>: <span class="s">"req_8f21ac"</span></div>
+        <div class="summary"><span class="mm">GET</span><span class="uu">/shop/products/42</span><span class="meta">· 200 · 40ms · 3.3 kB</span><span class="copy">⧉</span></div>
+        <div class="dtabs"><span>Loader Data</span><b>Routes</b><span>Payload</span><span>Headers</span><span>Response</span><span>Raw</span><span class="find">Find… ⌘F</span></div>
+        <div class="pane">
+<div class="tree"><span class="tw">▾</span> <span class="k">root</span>  <span class="mk">— /</span>
+  <span class="tw">▾</span> <span class="k">routes/shop</span>  <span class="mk">— /shop</span>
+      <span class="k">params</span>: {}
+    <span class="tw">▾</span> <span class="k">routes/shop.products</span>  <span class="mk">— /shop/products</span>
+        <span class="k">params</span>: {}
+      <span class="tw">▾</span> <span class="k">routes/shop.products.$id</span>  <span class="mk">— /shop/products/42</span>
+          <span class="tw">▾</span> <span class="k">params</span>: { <span class="k">id</span>: <span class="s">"42"</span> }
+          <span class="tw">▾</span> <span class="k">loaderData</span>: { product, related }
+              <span class="k">product</span>: { name: <span class="s">"Blue Widget"</span>, price: <span class="n">125</span> }
+              <span class="k">related</span>: Array(4)</div>
+        </div>
       </div>
-    </div>
+    </div></div>
   </div>
 </section>
 
-<!-- SHOT 3 -->
+<!-- =============================== SHOT 3 =============================== -->
 <section class="shot">
   <span class="brand"><span class="rr">RR</span> React Router Inspector</span>
-  <div class="cap"><p class="eyebrow">Unified console</p><h2>Browser <b>and</b> server logs, in one place.</h2></div>
+  <div class="cap"><p class="eyebrow">Unified console</p><h2>Browser <b>and</b> server logs — in a dockable split pane.</h2></div>
   <div class="panel">
-    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="tabs"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
-    <div class="split">
-      <div class="list">
-        <div class="row"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
-        <div class="row sel"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
-        <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="dtb"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
+    <header class="tb">
+      <span class="rr">RR</span>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10"/><path d="M6.4 4.5V3.3c0-.44.36-.8.8-.8h1.6c.44 0 .8.36.8.8v1.2"/><path d="M4.7 4.5l.5 8.1c.03.42.38.74.8.74h4c.42 0 .77-.32.8-.74l.5-8.1"/><path d="M6.6 6.7v4.4M9.4 6.7v4.4"/></svg></button>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v6"/><path d="M5.5 5 8 2.5 10.5 5"/><path d="M3.5 8.5v3.5a.6.6 0 0 0 .6.6h7.8a.6.6 0 0 0 .6-.6V8.5"/></svg></button>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8.5v-6"/><path d="M5.5 6 8 8.5 10.5 6"/><path d="M3.5 8.5v3.5a.6.6 0 0 0 .6.6h7.8a.6.6 0 0 0 .6-.6V8.5"/></svg></button>
+      <span class="sep"></span>
+      <span class="chk"><span class="box">✓</span> Preserve</span>
+      <span class="chk"><span class="box">✓</span> Logs</span>
+      <span class="ctog on"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M5 6.5 7 8.25 5 10"/><path d="M8.5 10.25h3"/></svg>Console<span class="cnt">6</span></span>
+      <span class="sep"></span>
+      <span class="badge ok">server: ok</span>
+      <span class="badge bridge">live router bridge</span>
+      <span class="search">Filter events &amp; logs…</span>
+    </header>
+    <div class="main">
+      <div class="split">
+        <div class="listcol">
+          <div class="kinds"><span class="kchip" style="--c:var(--k-router)">router</span><span class="kchip" style="--c:var(--k-data)">data</span><span class="kchip" style="--c:var(--k-gql)">gql</span><span class="kchip" style="--c:var(--k-api)">api</span><span class="kchip" style="--c:var(--k-ssr)">ssr</span></div>
+          <div class="lh"><span></span><span></span><span>route</span><span>st</span><span>dur</span><span>size</span></div>
+          <div class="list">
+            <div class="row"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · load</span><span class="st">200</span><span class="dur">42ms</span><span class="sz">3.1kB</span></div>
+            <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span><span class="dur">18ms</span><span class="sz">2.4kB</span></div>
+            <div class="row sel"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary</span><span class="st">200</span><span class="dur">214ms</span><span class="sz">6.0kB</span></div>
+            <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory</span><span class="st bad">500</span><span class="dur">—</span><span class="sz">—</span></div>
+          </div>
+        </div>
+        <div class="detail">
+          <div class="summary"><span class="mm">GET</span><span class="uu">/catalog/summary</span><span class="meta">· 200 · 214ms · 6.0 kB</span><span class="copy">⧉</span></div>
+          <div class="dtabs"><span>Loader Data</span><span>Routes</span><span>Payload</span><span>Headers</span><b>Response</b><span>Raw</span><span class="find">Find… ⌘F</span></div>
+          <div class="pane">
+<div class="tree"><span class="tw">▾</span> { summary, updatedAt }
+    <span class="k">summary</span>: { skus: <span class="n">1240</span>, lowStock: <span class="n">18</span> }
+    <span class="k">updatedAt</span>: <span class="s">Date(2030-01-15T12:00:00Z)</span>
+    <span class="k">topCategories</span>: Array(6)
+      <span class="k">0</span>: { name: <span class="s">"widgets"</span>, sold: <span class="n">4120</span> }
+      <span class="k">1</span>: { name: <span class="s">"gizmos"</span>, sold: <span class="n">3980 <span class="trunc">⚠ truncated — cut off here</span></span></div>
+          </div>
+        </div>
       </div>
-      <div class="detail" style="padding:0">
-        <div class="dtabs" style="padding:14px 16px 9px;margin:0"><span>Loader Data</span><span>Payload</span><span>Headers</span><span>Response</span><b>Console</b></div>
+      <div class="cresizer"></div>
+      <section class="cpane">
+        <header class="chead"><span>Console</span><span class="x">✕</span></header>
         <div class="filters"><span class="fchip">server 4</span><span class="fchip">browser 2</span><span class="fchip off">error 1</span><span class="fchip">warn 1</span><span class="fchip">info 2</span><span class="fchip">debug 1</span></div>
-        <div class="logline"><span class="src">server</span><span class="lvl">log</span><span class="loc">/shop/products</span><span>[products.loader] fetching catalog</span></div>
-        <div class="logline"><span class="src">server</span><span class="lvl i">info</span><span class="loc">/shop/products</span><span>products.loader resolved in 231ms</span></div>
-        <div class="logline"><span class="lvl i">info</span><span class="loc">/shop/products</span><span>[cart] hydrated 3 items</span></div>
-        <div class="logline"><span class="lvl w">warn</span><span class="loc">/shop/products</span><span>price still pending at first paint</span></div>
-        <div class="logline"><span class="src">server</span><span class="lvl e">error</span><span class="loc">/shop/products</span><span>[inventory] upstream timeout</span></div>
-      </div>
+        <div class="cbody">
+          <div class="logline"><span class="src">server</span><span class="lvl">log</span><span class="loc">/shop/products</span><span>[products.loader] fetching catalog</span></div>
+          <div class="logline"><span class="src">server</span><span class="lvl i">info</span><span class="loc">/shop/products</span><span>products.loader resolved in 231ms</span></div>
+          <div class="logline"><span class="lvl i">info</span><span class="loc">/shop/products</span><span>[cart] hydrated 3 items</span></div>
+          <div class="logline"><span class="lvl w">warn</span><span class="loc">/shop/products</span><span>price still pending at first paint</span></div>
+          <div class="logline"><span class="src">server</span><span class="lvl e">error</span><span class="loc">/catalog/inventory</span><span>[inventory] upstream timeout after 5000ms</span></div>
+        </div>
+      </section>
     </div>
   </div>
 </section>
 
-<!-- SHOT 4 -->
+<!-- =============================== SHOT 4 =============================== -->
 <section class="shot">
   <span class="brand"><span class="rr">RR</span> React Router Inspector</span>
-  <div class="cap"><p class="eyebrow">Full request detail</p><h2>Every call's <b>URL, params &amp; response</b> — like the Network tab.</h2></div>
+  <div class="cap"><p class="eyebrow">Full request detail</p><h2>Copy any request as <b>JSON, a URL, or cURL</b>.</h2></div>
   <div class="panel">
-    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="tabs"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
-    <div class="split">
-      <div class="list">
-        <div class="row"><span class="tag t-router">router</span><span class="m">GET</span><span class="rt">/shop/products · initial load</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-data">data</span><span class="m">GET</span><span class="rt">/shop/products.data</span><span class="st">200</span></div>
-        <div class="row sel"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span></div>
-        <div class="row"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/summary · 214ms</span><span class="st">200</span></div>
-        <div class="row bad"><span class="tag t-ssr">ssr</span><span class="m">GET</span><span class="rt">/catalog/inventory · timeout</span><span class="st">500</span></div>
+    <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="dtb"><span>Elements</span><span>Network</span><span>Console</span><span class="on">React Router</span></span></div>
+    <header class="tb">
+      <span class="rr">RR</span>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10"/><path d="M6.4 4.5V3.3c0-.44.36-.8.8-.8h1.6c.44 0 .8.36.8.8v1.2"/><path d="M4.7 4.5l.5 8.1c.03.42.38.74.8.74h4c.42 0 .77-.32.8-.74l.5-8.1"/><path d="M6.6 6.7v4.4M9.4 6.7v4.4"/></svg></button>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v6"/><path d="M5.5 5 8 2.5 10.5 5"/><path d="M3.5 8.5v3.5a.6.6 0 0 0 .6.6h7.8a.6.6 0 0 0 .6-.6V8.5"/></svg></button>
+      <button class="ib"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8.5v-6"/><path d="M5.5 6 8 8.5 10.5 6"/><path d="M3.5 8.5v3.5a.6.6 0 0 0 .6.6h7.8a.6.6 0 0 0 .6-.6V8.5"/></svg></button>
+      <span class="sep"></span>
+      <span class="chk"><span class="box">✓</span> Preserve</span>
+      <span class="chk"><span class="box">✓</span> Logs</span>
+      <span class="ctog"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M5 6.5 7 8.25 5 10"/><path d="M8.5 10.25h3"/></svg>Console<span class="cnt">6</span></span>
+      <span class="sep"></span>
+      <span class="badge bridge">live router bridge</span>
+      <span class="search">status:200 method:POST</span>
+    </header>
+    <div class="main"><div class="split">
+      <div class="listcol">
+        <div class="kinds"><span class="kchip" style="--c:var(--k-router)">router</span><span class="kchip off" style="--c:var(--k-data)">data</span><span class="kchip" style="--c:var(--k-gql)">gql</span><span class="kchip off" style="--c:var(--k-api)">api</span><span class="kchip off" style="--c:var(--k-ssr)">ssr</span></div>
+        <div class="lh"><span></span><span></span><span>route</span><span>st</span><span>dur</span><span>size</span></div>
+        <div class="list">
+          <div class="row sel"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · ProductList</span><span class="st">200</span><span class="dur">55ms</span><span class="sz">1.9kB</span></div>
+          <div class="row"><span class="tag t-gql">gql</span><span class="m">POST</span><span class="rt">GraphQL · AddToCart</span><span class="st">200</span><span class="dur">61ms</span><span class="sz">0.6kB</span></div>
+        </div>
       </div>
       <div class="detail">
-        <div class="dtabs"><span>Loader Data</span><b>Payload</b><span>Headers</span><span>Response</span><span>Console</span></div>
-<div class="tree"><span class="tw">▾</span> { operationName, variables, query }
+        <div class="summary"><span class="mm">POST</span><span class="uu">/graphql · ProductList</span><span class="meta">· 200 · 55ms · 1.9 kB</span><span class="copy">⧉</span></div>
+        <div class="dtabs"><span>Loader Data</span><span>Routes</span><b>Payload</b><span>Headers</span><span>Response</span><span>Raw</span><span class="find">Find… ⌘F</span></div>
+        <div class="pane">
+          <div class="cbtn"><span>Copy JSON</span><span>Copy URL</span><span>Copy as cURL</span></div>
+<div class="tree"><span class="k">url</span>: <span class="s">https://shop.example.com/graphql</span>
+<span class="k">method</span>: <span class="s">POST</span>
+<span class="tw">▾</span> { operationName, variables, query }
     <span class="k">operationName</span>: <span class="s">"ProductList"</span>
   <span class="tw">▾</span> <span class="k">variables</span>: { category, inStockOnly }
       <span class="k">category</span>: <span class="s">"widgets"</span>
       <span class="k">inStockOnly</span>: <span class="b">true</span>
-    <span class="k">query</span>: <span class="s">"query ProductList($category: String!, $inStockOnly: Boolean!) { products(…) { name price } }"</span></div>
+    <span class="k">query</span>: <span class="s">"query ProductList($category: String!) { products(…) { name price } }"</span></div>
+        </div>
       </div>
-    </div>
+    </div></div>
   </div>
 </section>
 

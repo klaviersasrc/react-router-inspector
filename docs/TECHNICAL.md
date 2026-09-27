@@ -23,15 +23,24 @@ from the inspected same-origin application to the local extension panel.
 ```
 manifest.json            MV3: devtools_page + content scripts (ISOLATED + MAIN) + service worker
 devtools.html/js         registers the "React Router" panel
-panel.html/css/js        the panel UI, DevTools network capture, rendering
+panel.html/css/js        the panel UI, DevTools network capture, rendering, split panes
 src/turbo-init.mjs       exposes the vendored turbo-stream decoder (external — CSP forbids inline)
 src/vendor/turbo-stream  the single-fetch decoder (MIT, pinned to RR's 2.4.1)
-src/json-tree.js         collapsible tree renderer (Dates/Maps/BigInt/undefined aware)
+src/json-tree.js         collapsible tree renderer (Dates/Maps/BigInt/undefined aware; copy + diff marks)
 src/site-access.js       optional per-origin permission + dynamic script registration
 src/injected.js          MAIN-world page bridge: router subscribe + fetch capture + console + SSE consumer
 src/content.js           ISOLATED relay: page <-> extension (both directions)
 src/background.js        service worker: routes messages between panels and tabs
 server-bridge/…          the dev-only Vite plugin
+
+pure, unit-tested helper modules (each exposes a window.rr* fn, no DOM/globals):
+src/curl.js              Copy-as-cURL — request → shell-safe curl string
+src/diff.js              loader-data diff — added/changed/removed keys vs previous nav
+src/routes-view.js       Routes tab — matched-route hierarchy view model
+src/session-io.js        export/import — session (de)serialization + header redaction
+src/filter.js            filter mini-syntax parser (status:/method:/kind:/-exclude)
+src/group.js             group-by-navigation bucketing
+src/partial-json.js      truncated-JSON repair: inject RR_TRUNCATED sentinel at the cut point
 ```
 
 ## Data flow
@@ -118,10 +127,36 @@ For a Web Store submission:
 - The `scripting` permission is used only for those user-approved registrations.
 - No other changes required — there's no remote code or data collection to declare.
 
+## Rendering & UI structure
+
+The panel is a single `panel.js` controller over a `panes` map (loader / routes /
+payload / headers / response / raw, plus the console body). The detail tree is
+rendered by `json-tree.js`, which threads diff marks and JSON paths through each
+node, previews collapsed objects as `key: value` pairs within a char budget, adds a
+hover-copy control per row, and renders the `RR_TRUNCATED` sentinel as a visible
+truncation marker. The console is a **bottom split pane** (`#consolePane`) with a
+drag resizer; its open state and height persist via the same `pref*` helpers that
+persist filters, the active tab, and toggles.
+
+Logic that can be tested without a browser is factored into the pure `window.rr*`
+helper modules above. Each is unit-tested in Node by evaluating the file with
+`new Function(readFileSync(...))()` against minimal DOM stubs — no bundler, no
+headless browser.
+
 ## Testing
+
+Ten test files, all green:
 
 - `test/decode.test.mjs` — turbo-stream round-trip incl. Date/Map/BigInt/undefined.
 - `test/site-access.test.mjs` — exact-origin matching and dynamic registration.
+- `test/curl.test.mjs` — request → shell-safe cURL.
+- `test/diff.test.mjs` — loader-data diff (added/changed/removed).
+- `test/routes-view.test.mjs` — matched-route hierarchy view model.
+- `test/session-io.test.mjs` — session export/import + header redaction.
+- `test/filter.test.mjs` — filter mini-syntax parsing + matching.
+- `test/group.test.mjs` — group-by-navigation bucketing.
+- `test/json-tree.test.mjs` — tree rendering, previews, copy, truncation marker.
+- `test/partial-json.test.mjs` — truncated-JSON sentinel placement.
 - `server-bridge/plugin.test.mjs` — stdout tee: logger-bypass capture, multi-line
   grouping, ANSI strip, echo-drop.
 - `server-bridge/net.test.mjs` — fetch interceptor: structured event, non-destructive
