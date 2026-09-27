@@ -8,8 +8,9 @@ decoded, in one place.
 - [The panel at a glance](#the-panel-at-a-glance)
 - [Event types](#event-types)
 - [The detail tabs](#the-detail-tabs)
-- [The Console tab](#the-console-tab)
+- [The Console pane](#the-console-pane)
 - [Toolbar](#toolbar)
+- [Keyboard shortcuts](#keyboard-shortcuts)
 - [Seeing server logs & SSR calls (the Vite plugin)](#server-side-the-vite-plugin)
 - [Troubleshooting](#troubleshooting)
 
@@ -30,19 +31,23 @@ Full first-run steps are in `INSTALL.md` (bundled in the zip).
 
 ```
 ┌ Toolbar ─────────────────────────────────────────────────────────────┐
-│ [RR] Clear  ☑Preserve  ☑Logs   (live router bridge)   [ filter … ]    │
+│ [RR] 🗑 ⬆ ⬇ │ ☑Preserve ☑Logs ▣Console │ ⚙ server: ok  live  [filter]│
 ├────────────────────────────┬──────────────────────────────────────────┤
-│ EVENT LIST                 │ DETAIL                                    │
-│ router · GET /overview     │ Loader Data · Payload · Headers ·         │
-│ data   · GET …/overview.data│ Response · Raw · Console                  │
-│ gql    · POST GraphQL       │                                           │
-│ api    · GET /positions/…   │ (collapsible JSON tree of the selected    │
-│ ssr    · GET …/byCsr        │  event)                                   │
-└────────────────────────────┴──────────────────────────────────────────┘
+│ [type chips: router data …]│ GET /overview · 200 · 42ms · 3.1kB    ⧉  │
+│ EVENT LIST     status dur sz│ Loader · Routes · Payload · Headers ·     │
+│ router · /overview  200 42ms│ Response · Raw          [ Find… ⌘F ]      │
+│ data   · /overview  200 18ms│                                           │
+│ gql    · GraphQL    200 …   │ (collapsible JSON tree of the selected    │
+│ api    · /positions 200 …   │  event)                                   │
+├────────────────────────────┴──────────────────────────────────────────┤
+│ Console (toggleable bottom split pane)                          ✕      │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Left:** every event, newest at the bottom. Click one to inspect it.
-- **Right:** tabs for the selected event.
+- **Left:** every event, newest at the bottom, with **status / duration / size**
+  columns and type chips to filter by call kind. Click a row to inspect it.
+- **Right:** a summary header + tabs for the selected event.
+- **Bottom:** the Console pane, shown only when toggled on (see below).
 - **Drag the divider** to resize; **double-click** it to reset.
 - Rows with a 4xx/5xx status are highlighted red.
 
@@ -62,25 +67,39 @@ Each row carries a colored tag:
 
 ---
 
-## The detail tabs
+A **summary header** above the tabs shows the selected event's method · route ·
+status · duration · size, with a ⧉ to copy its URL.
 
 - **Loader Data** — the decoded loader/action data for `router`/`data` events, as a
   collapsible tree. Real types survive: `Date(...)`, `Map(n)`, `BigInt` (`…n`),
-  `undefined`, nested arrays/objects.
+  `undefined`. Collapsed objects preview as `key: value` pairs. When an earlier
+  snapshot of the same route exists, a **Diff** toggle highlights what changed vs the
+  previous navigation — added / changed / removed keys, inline, with a `+a ~c −r` count.
+- **Routes** — the matched route hierarchy for a navigation (from the live bridge):
+  each route's `id`, `pathname`, `params`, and its own `loaderData` slice.
 - **Payload** — the request inputs, led by the **full URL** and method, then query
-  params and any request body (GraphQL operations show `operationName` + `variables`).
+  params and any request body (GraphQL shows `operationName` + `variables`). Has
+  **Copy JSON**, **Copy URL**, and **Copy as cURL**.
 - **Headers** — request and response headers for network/SSR calls.
-- **Response** — the decoded response body (JSON or turbo-stream).
-- **Raw** — the untouched wire text (for `data` events, the raw turbo-stream).
-- **Console** — see below.
+- **Response** — the decoded response body (JSON or turbo-stream). A capped body shows
+  a red **⚠ truncated — cut off here** marker at the exact point the data ended.
+- **Raw** — the untouched wire text, with **Pretty** (pretty-print JSON), **Wrap**
+  (word-wrap), and **Copy** controls.
 
-Long values (URLs, tokens) wrap so you can read the whole thing.
+**Copy anything:** hover any tree row for a ⧉ that copies that value. **Find in pane**
+(⌘F) searches the active tree, expanding + highlighting each hit (Enter / Shift+Enter
+to step, Esc to clear). Long values wrap so you can read the whole thing.
 
 ---
 
-## The Console tab
+## The Console pane
 
-One place for **browser and server** console output.
+Console output lives in its own **bottom split pane**, not a tab. Toggle **Console**
+in the toolbar to open it; drag its top edge to resize, and close it with the **✕**,
+the toolbar toggle, or the **`c`** key. The toggle carries a live count badge, and the
+open/closed state + height persist across reloads.
+
+One place for **browser and server** console output:
 
 - **Grouped** — a logged object is **one collapsible entry**, not fragmented one
   line per row. Click the ▸ to expand.
@@ -89,7 +108,6 @@ One place for **browser and server** console output.
 - **Filter chips** — a bar of toggleable chips: **source** (`browser` / `server`,
   shown when both are present) and **level**, each with a live count. Click to
   hide/show. Combine with the toolbar text filter.
-- The tab badge shows the captured count.
 
 > **Console capture is a `console.*` wrap**, which inserts a frame into stack
 > traces. Toggle it off with **Logs** in the toolbar when you want a pristine
@@ -102,11 +120,31 @@ One place for **browser and server** console output.
 
 | Control | Does |
 |---------|------|
-| **Clear** | Empties the event list + console. |
+| 🗑 **Clear** | Empties the event list + console. |
+| ⬆ **Export** | Saves the captured session to a JSON file (auth/cookie headers redacted) to share a repro. |
+| ⬇ **Import** | Loads a previously exported session JSON. |
 | **Preserve** | Keeps events across navigations (**on by default** — server logs/SSR calls happen *during* a navigation). |
 | **Logs** | Toggles console capture (see above). |
-| **live router bridge** badge | Green when the page bridge is connected to the running router. |
-| **filter** | Filters the list (and the Console) by route/URL/text. |
+| ▣ **Console** | Toggles the bottom console split pane; badge shows the captured count. |
+| ⚙ **Server setup** | Opens the Vite-plugin setup card (download / copy the plugin). |
+| **server: …** badge | Server bridge status (waiting / ok). |
+| **mode** badge | Data source — `network decode` or `live router bridge`. |
+| **Enable this site** | On a non-local origin, requests per-site access and reloads with the live bridge. |
+| **filter** | Filters the list (and the Console) by route/URL/text, with a mini-syntax: `status:5xx` · `status:500` · `method:POST` · `kind:graphql` · `-word` to exclude. Plain words match route/URL. |
+
+---
+
+## Keyboard shortcuts
+
+Focus the event list (or the panel) and:
+
+| Key | Action |
+|-----|--------|
+| **↑ / ↓** or **j / k** | Move selection through the event list |
+| **1**–**6** | Switch detail tab (Loader · Routes · Payload · Headers · Response · Raw) |
+| **c** | Toggle the Console pane |
+| **⌘K** / **Ctrl+K** | Jump to the toolbar filter |
+| **⌘F** / **Ctrl+F** | Find in the active pane (Enter / Shift+Enter to step hits, Esc to clear) |
 
 ---
 

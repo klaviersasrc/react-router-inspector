@@ -1,6 +1,6 @@
 # React Router Inspector
 
-[![Latest release](https://img.shields.io/badge/release-v1.0.6-4ec9b0?style=flat-square)](https://github.com/klaviersasrc/react-router-inspector/releases/latest)
+[![Latest release](https://img.shields.io/badge/release-v1.0.10-4ec9b0?style=flat-square)](https://github.com/klaviersasrc/react-router-inspector/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](LICENSE)
 [![Chrome](https://img.shields.io/badge/Chrome-MV3%20DevTools-6b7280?style=flat-square)](manifest.json)
 
@@ -8,20 +8,38 @@ A Chrome DevTools extension that shows React Router's data flow the way the Netw
 tab shows request payload + response body: **per route, decoded, readable**. Built to
 replace the in-app `react-router-devtools` panel for inspection work.
 
-## What it does (POC scope)
+## What it does
 
-- Adds a **React Router** panel to Chrome DevTools.
-- Captures the single-fetch `.data` requests (loaders = GET, actions = POST) from the
-  DevTools network feed — **no changes to your app required**.
-- Splits each event into tabs: **Loader Data** (decoded), **Payload** (query params +
-  form body), **Response** (decoded body), **Raw** (untouched wire text).
-- Optional **page bridge** (MAIN-world script) that reads the live router state
-  (`loaderData` / `actionData`) directly for the richest view — no app import needed,
-  it self-injects on localhost and can be enabled per deployed origin.
+Adds a **React Router** panel to Chrome DevTools that unifies three data sources —
+the live router bridge, DevTools network capture, and an optional dev server bridge —
+into one view, **with no changes to your app required**.
 
-Two data sources, shown by the badge in the toolbar:
-- `network decode` — decoded from captured `.data` traffic (works on prod, any RR app).
-- `live router bridge` — read straight from the running router (fullest data).
+- **Every event, per route** — router navigations, `.data` single-fetch requests
+  (turbo-stream decoded), GraphQL + REST/XHR calls, and **server-side SSR fetches** —
+  each tagged and category-colored, with status / duration / size columns.
+- **Detail tabs** — **Loader Data**, **Routes** (the matched route hierarchy, each
+  route's params + its own loaderData), **Payload**, **Headers**, **Response**, and
+  **Raw** (Pretty + word-wrap toggles). Real types survive: `Date`, `Map`, `BigInt`,
+  `undefined`. Collapsed objects preview as `key: value` pairs.
+- **Loader-data diff** — what changed in `loaderData` vs the previous navigation to
+  the same route (added / changed / removed keys highlighted inline).
+- **Copy anything** — hover-copy any tree node, Copy JSON per pane, **Copy as cURL**
+  for any request.
+- **Find in pane** (⌘F), **keyboard nav** (↑/↓ or j/k, `1`–`6` tabs, ⌘K filter, `c`
+  console), and a **filter mini-syntax**: `status:5xx`, `method:POST`, `kind:graphql`,
+  `-exclude`.
+- **Group by navigation**, an **Errors** filter chip, and a **detail summary header**.
+- **Console** as a toggleable, drag-resizable bottom split pane — browser + server
+  logs, source/level filter chips, collapsible objects.
+- **Export / import** a captured session as JSON (auth/cookie headers redacted) to
+  share a repro; capped bodies show a marker at the exact truncation point.
+- **Per-site access** — works on localhost out of the box; enable any deployed origin
+  on demand (broad host access is optional, approved per-origin at runtime).
+
+Preferences (filters, active tab, console/panel state, toggles) persist across
+reloads. Data source is shown by a badge: `network decode` (from captured `.data`
+traffic — any RR app, incl. prod) or `live router bridge` (straight from the running
+router — the fullest data).
 
 ## Load it (unpacked)
 
@@ -43,11 +61,12 @@ Reload the extension after any file edit (the ⟳ on its card), then re-open Dev
 | `devtools.html` / `src/devtools.js` | registers the DevTools panel |
 | `panel.html` / `panel.css` / `src/panel.js` | the panel UI + network capture + rendering |
 | `src/site-access.js` | optional per-origin permission + dynamic bridge registration |
-| `src/turbo-stream-decode.js` | decodes single-fetch payloads (see spike notes) |
-| `src/json-tree.js` | collapsible JSON tree renderer |
-| `src/injected.js` | MAIN-world page bridge (live router + fetch capture) |
-| `src/content.js` | ISOLATED relay: page → extension |
+| `src/turbo-init.mjs` + `src/vendor/turbo-stream.mjs` | vendored single-fetch (`.data`) decoder (MIT, pinned to RR's 2.4.1) |
+| `src/json-tree.js` | collapsible JSON tree renderer (copy, diff marks, kv previews) |
+| `src/injected.js` | MAIN-world page bridge (live router + fetch capture + SSE consumer) |
+| `src/content.js` | ISOLATED relay: page ↔ extension |
 | `src/background.js` | routes bridge messages to the right panel |
+| `src/curl.js` · `diff.js` · `routes-view.js` · `session-io.js` · `filter.js` · `group.js` · `partial-json.js` | pure, unit-tested helpers (Copy-as-cURL, loader diff, routes view, export/import, filter syntax, group-by-nav, truncated-JSON repair) |
 
 ## Team distribution
 
