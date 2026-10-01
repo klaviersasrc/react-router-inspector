@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "demo-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "examples/demo-app", "run", "dev"],
+      "port": 5173
+    }
+  ]
+}

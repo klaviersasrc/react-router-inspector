@@ -127,12 +127,15 @@ export default function rrInspectorServerLogs(options = {}) {
   // Intercept global fetch (undici) — the app's server-side HTTP client — and emit each
   // request/response as a structured "net" event (URL, method, headers, status,
   // timing, body). Non-destructive: reads the body via res.clone().
+  // Guarded by a tag on the wrapper itself, NOT a one-time global flag: if something
+  // later REPLACES globalThis.fetch — React Router's installGlobals, an SSR env
+  // rebuild — this re-wraps the new fetch on the next call, so server-side (ssr)
+  // capture never silently dies while stdout capture keeps working.
   function patchFetch() {
     const g = globalThis;
-    if (typeof g.fetch !== "function" || g.__rrFetchPatched) return;
-    g.__rrFetchPatched = true;
     const orig = g.fetch;
-    g.fetch = async function (...args) {
+    if (typeof orig !== "function" || orig.__rrInspectorWrapped) return;
+    const wrapped = async function (...args) {
       const input = args[0];
       const init = args[1];
       const reqObj = typeof input === "object" && input !== null ? input : null;
@@ -167,6 +170,8 @@ export default function rrInspectorServerLogs(options = {}) {
         throw err;
       }
     };
+    wrapped.__rrInspectorWrapped = true;
+    g.fetch = wrapped;
   }
 
   return {
@@ -179,6 +184,11 @@ export default function rrInspectorServerLogs(options = {}) {
     },
 
     configureServer(server) {
+      // Re-assert the fetch patch on every request. React Router installs its own
+      // global fetch after our initial patch (and again on some SSR rebuilds), which
+      // would otherwise leave server-side (ssr) capture silently dead; patchFetch is
+      // a cheap no-op once our wrapper is in place.
+      server.middlewares.use((_req, _res, next) => { patchFetch(); next(); });
       const handler = (req, res) => {
         res.writeHead(200, {
           "Content-Type": "text/event-stream",
