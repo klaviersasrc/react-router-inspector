@@ -94,10 +94,17 @@ to step, Esc to clear). Long values wrap so you can read the whole thing.
 
 ## The Console pane
 
-Console output lives in its own **bottom split pane**, not a tab. Toggle **Console**
-in the toolbar to open it; drag its top edge to resize, and close it with the **✕**,
+Console output lives in its own **split pane**, not a tab. Toggle **Console**
+in the toolbar to open it; drag the divider to resize, and close it with the **✕**,
 the toolbar toggle, or the **`c`** key. The toggle carries a live count badge, and the
-open/closed state + height persist across reloads.
+open/closed state + size persist across reloads.
+
+The pane **docks where it fits**: when DevTools is docked to the bottom (a wide,
+short panel) the console appears as a **right-hand column**; when DevTools is
+docked to the side (tall and narrow) it sits along the **bottom**. The **dock
+button** in the console header cycles this: **Auto** (follows the panel shape, the
+default) → pinned **Right** → pinned **Bottom**. Your choice — and each side's
+size — persists.
 
 One place for **browser and server** console output:
 

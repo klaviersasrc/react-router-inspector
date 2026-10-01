@@ -130,21 +130,36 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
 .badge.network { color: var(--loader); border-color: var(--loader); }
 
 /* Vertical stack: main content (list + detail) over the optional console pane. */
-#main { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
-#split { display: flex; flex: 1 1 auto; min-height: 0; }
+#main { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+/* Wide panels (DevTools docked bottom) dock the console on the right instead. */
+#main[data-console-dock="right"] { flex-direction: row; }
+#split { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
 #consoleResizer { flex: 0 0 1px; cursor: row-resize; background: var(--border); position: relative; }
 #consoleResizer[hidden] { display: none; }
 #consoleResizer::after { content: ""; position: absolute; inset: -4px 0; } /* wide invisible grab zone */
 #consoleResizer:hover, #consoleResizer.dragging { background: var(--accent); }
+/* Right-docked: the resizer becomes a vertical, column-resize handle. */
+#main[data-console-dock="right"] #consoleResizer { cursor: col-resize; }
+#main[data-console-dock="right"] #consoleResizer::after { inset: 0 -4px; }
 body.row-resizing { cursor: row-resize; user-select: none; }
-body.row-resizing iframe { pointer-events: none; }
-#consolePane { flex: 0 0 auto; flex-basis: 45%; min-height: 80px; display: flex; flex-direction: column; background: var(--bg); }
+body.col-resizing { cursor: col-resize; user-select: none; }
+body.row-resizing iframe, body.col-resizing iframe { pointer-events: none; }
+#consolePane { flex: 0 0 auto; flex-basis: 45%; min-height: 80px; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
+/* Right-docked: width instead of height; a left border replaces the top one. */
+#main[data-console-dock="right"] #consolePane { min-height: 0; min-width: 220px; border-left: 1px solid var(--border); }
 #consolePane[hidden] { display: none; }
 #consoleHead { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 4px 10px; border-bottom: 1px solid var(--border); background: var(--bg); }
 .console-title { font: 700 10px/1 -apple-system, "Segoe UI", sans-serif; text-transform: uppercase; letter-spacing: .4px; color: var(--fg-dim); }
-#consoleClose { display: inline-flex; align-items: center; justify-content: center; background: none; border: none; color: var(--fg-dim); cursor: pointer; padding: 3px; border-radius: 5px; }
-#consoleClose:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
-#consoleClose svg { display: block; }
+.console-head-actions { display: inline-flex; align-items: center; gap: 2px; }
+#consoleClose, #consoleDock { display: inline-flex; align-items: center; justify-content: center; background: none; border: none; color: var(--fg-dim); cursor: pointer; padding: 3px; border-radius: 5px; position: relative; }
+#consoleClose:hover, #consoleDock:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
+#consoleClose svg, #consoleDock svg { display: block; }
+/* Show only the icon for the current effective side. */
+#consoleDock .dk { display: none; }
+#consoleDock[data-side="bottom"] .dk-bottom { display: block; }
+#consoleDock[data-side="right"] .dk-right { display: block; }
+/* A small accent dot marks Auto mode (side follows the panel shape). */
+#consoleDock.is-auto::after { content: ""; position: absolute; top: 2px; right: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
 #consoleBody { flex: 1 1 auto; overflow: auto; padding: 0 10px 6px; }
 /* Console toolbar toggle + count badge. */
 #consoleToggle { display: inline-flex; align-items: center; gap: 5px; }

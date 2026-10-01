@@ -880,7 +880,48 @@
     if (rz) rz.hidden = !open;
     if (tg) tg.classList.toggle("on", open);
     prefSet("consoleOpen", open ? "1" : "0");
-    if (open) renderConsole();
+    if (open) { applyConsoleDock(); renderConsole(); }
+  }
+  // Console dock side. "auto" follows the panel's shape — wide-and-short (DevTools
+  // docked to the bottom) docks the console on the RIGHT so it doesn't eat the
+  // little vertical space; tall-and-narrow keeps it on the bottom. "right"/"bottom"
+  // are explicit pins. Persisted; a header button cycles auto → right → bottom.
+  let consoleDockMode = prefGet("consoleDock") || "auto";
+  function effectiveDockSide() {
+    if (consoleDockMode === "right" || consoleDockMode === "bottom") return consoleDockMode;
+    const main = document.getElementById("main");
+    const r = main ? main.getBoundingClientRect() : { width: 0, height: 1 };
+    return r.width >= r.height * 1.4 ? "right" : "bottom"; // bias toward bottom until clearly wide
+  }
+  function applyConsoleDock() {
+    const main = document.getElementById("main");
+    const pane = document.getElementById("consolePane");
+    const btn = document.getElementById("consoleDock");
+    if (!main || !pane) return;
+    const side = effectiveDockSide();
+    if (side === "right") main.dataset.consoleDock = "right";
+    else main.removeAttribute("data-console-dock");
+    // Restore the per-side size: width when docked right, height when bottom.
+    if (side === "right") {
+      const w = Number(prefGet("consoleWidth"));
+      pane.style.flexBasis = (w > 200 ? w : Math.round(main.getBoundingClientRect().width * 0.4)) + "px";
+    } else {
+      const h = Number(prefGet("consoleHeight"));
+      pane.style.flexBasis = (h > 80 ? h : Math.round(main.getBoundingClientRect().height * 0.45)) + "px";
+    }
+    if (btn) {
+      btn.dataset.side = side;
+      btn.classList.toggle("is-auto", consoleDockMode === "auto");
+      btn.title =
+        consoleDockMode === "auto" ? `Console dock: Auto (follows panel shape, now ${side}) — click to pin Right`
+        : consoleDockMode === "right" ? "Console dock: Pinned Right — click to pin Bottom"
+        : "Console dock: Pinned Bottom — click for Auto";
+    }
+  }
+  function cycleConsoleDock() {
+    consoleDockMode = consoleDockMode === "auto" ? "right" : consoleDockMode === "right" ? "bottom" : "auto";
+    prefSet("consoleDock", consoleDockMode);
+    applyConsoleDock();
   }
   function updateConsoleCount() {
     const el = document.getElementById("consoleCount");
@@ -1150,28 +1191,49 @@
   {
     const toggle = document.getElementById("consoleToggle");
     const closeBtn = document.getElementById("consoleClose");
+    const dockBtn = document.getElementById("consoleDock");
     if (toggle) toggle.addEventListener("click", () => setConsole(!consoleShown));
     if (closeBtn) closeBtn.addEventListener("click", () => setConsole(false));
+    if (dockBtn) dockBtn.addEventListener("click", cycleConsoleDock);
     (function initConsoleResizer() {
       const main = document.getElementById("main");
       const pane = document.getElementById("consolePane");
       const rz = document.getElementById("consoleResizer");
       if (!main || !pane || !rz) return;
-      const saved = Number(prefGet("consoleHeight"));
-      if (saved > 80) pane.style.flexBasis = saved + "px";
       let dragging = false;
-      rz.addEventListener("mousedown", (e) => { dragging = true; rz.classList.add("dragging"); document.body.classList.add("row-resizing"); e.preventDefault(); });
+      rz.addEventListener("mousedown", (e) => {
+        dragging = true; rz.classList.add("dragging");
+        document.body.classList.add(effectiveDockSide() === "right" ? "col-resizing" : "row-resizing");
+        e.preventDefault();
+      });
       window.addEventListener("mousemove", (e) => {
         if (!dragging) return;
         const rect = main.getBoundingClientRect();
-        const h = Math.max(80, Math.min(rect.bottom - e.clientY, rect.height - 120));
-        pane.style.flexBasis = h + "px";
+        if (effectiveDockSide() === "right") {
+          const w = Math.max(200, Math.min(rect.right - e.clientX, rect.width - 220));
+          pane.style.flexBasis = w + "px";
+        } else {
+          const h = Math.max(80, Math.min(rect.bottom - e.clientY, rect.height - 120));
+          pane.style.flexBasis = h + "px";
+        }
       });
       window.addEventListener("mouseup", () => {
         if (!dragging) return;
-        dragging = false; rz.classList.remove("dragging"); document.body.classList.remove("row-resizing");
-        prefSet("consoleHeight", String(Math.round(pane.getBoundingClientRect().height)));
+        dragging = false; rz.classList.remove("dragging");
+        document.body.classList.remove("row-resizing", "col-resizing");
+        const r = pane.getBoundingClientRect();
+        if (effectiveDockSide() === "right") prefSet("consoleWidth", String(Math.round(r.width)));
+        else prefSet("consoleHeight", String(Math.round(r.height)));
       });
+      // Re-orient automatically when the panel is reshaped (e.g. DevTools re-docked).
+      if (window.ResizeObserver) {
+        let raf = 0;
+        new ResizeObserver(() => {
+          if (!consoleShown || consoleDockMode !== "auto") return;
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(applyConsoleDock);
+        }).observe(main);
+      }
     })();
     setConsole(consoleShown); // restore persisted open state
   }
