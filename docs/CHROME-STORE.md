@@ -5,10 +5,10 @@ Chrome Web Store: ready-to-paste listing copy, the "What's new" note, the assets
 to supply, the permission & privacy answers review requires, and a step-by-step
 runbook for both a first submission and an update to the existing item.
 
-> **Current live version:** 1.0.8 · **This release:** 1.0.11 (item id
+> **Current live version:** 1.0.8 · **This release:** 1.0.12 (item id
 > `mejdpbjabihgbdgppfpcelmgpncknakj`).
 > Jump straight to **§6 Update the existing listing** if the item is already
-> published and you just want to ship 1.0.11.
+> published and you just want to ship 1.0.12.
 
 > **Choose a distribution mode.** For your team only, publish **Unlisted**
 > (installable via direct link) or **Private** to your Workspace org, or push it
@@ -94,7 +94,7 @@ Does not collect, store, or transmit any data. Everything stays on your machine.
 Plain text — the store does not render Markdown. Covers everything since the live
 1.0.8.
 ```
-v1.0.11 — a big inspection upgrade
+v1.0.12 — a big inspection upgrade
 
 • Routes tab — see the full matched-route tree for a navigation, each route's params and its own loader data.
 • Loader-data diff — highlights exactly what changed vs the previous navigation to the same route.
@@ -106,6 +106,7 @@ v1.0.11 — a big inspection upgrade
 • Export / import a captured session as JSON (auth headers redacted) to share a repro.
 • Truncation marker — capped responses now show exactly where the data was cut off.
 • Keyboard navigation, a per-request summary header, group-by-navigation, and preferences that persist across reloads.
+• Fix: the Errors filter can no longer trap the list — it stays clickable even on a page with no errors, so you can always switch it back off.
 
 No app changes required. Works on localhost out of the box; enable any deployed origin on demand.
 ```
@@ -116,7 +117,7 @@ No app changes required. Works on localhost out of the box; enable any deployed 
 
 | Asset | Spec | Status |
 |-------|------|--------|
-| Extension package | **.zip with `manifest.json` at the root** — build with `./scripts/package-store.sh` | ✅ `dist/react-router-inspector-store-v1.0.11.zip` |
+| Extension package | **.zip with `manifest.json` at the root** — build with `./scripts/package-store.sh` | ✅ `dist/react-router-inspector-store-v1.0.12.zip` |
 | Store icon | 128×128 PNG | ✅ `icons/icon128.png` |
 | Screenshots | **1280×800** PNG, 1–5 of them | ✅ 4 in `dist/store-shots/` (see §4) |
 | Small promo tile *(optional)* | 440×280 PNG | ✅ `dist/store-shots/promo-small.jpg` *(regenerate if UI shown)* |
@@ -168,7 +169,7 @@ Host it anywhere reachable and paste the URL.
 ## 4. Screenshots (1280×800) — already generated
 
 Four store screenshots ship pre-rendered in `dist/store-shots/` (regenerated for
-the current (1.0.11) UI):
+the current (1.0.12) UI):
 
 1. `shot-1-loader-data.png` — event list + a decoded **Loader Data** tree with the
    diff toggle (Dates / Maps / BigInts, added/changed highlights).
@@ -284,22 +285,22 @@ Skip to **§6** if the item is already published.
 
 ---
 
-## 6. Update the existing listing to 1.0.11 — step by step
+## 6. Update the existing listing to 1.0.12 — step by step
 
-The item is already live at 1.0.8; this ships 1.0.11.
+The item is already live at 1.0.8; this ships 1.0.12.
 
-1. **Confirm the version bump.** `manifest.json` is at **1.0.11** (already done).
+1. **Confirm the version bump.** `manifest.json` is at **1.0.12** (already done).
    The store rejects an upload whose version is ≤ the published one.
 2. **Build the store zip:**
    ```bash
    ./scripts/package-store.sh
    ```
-   → `dist/react-router-inspector-store-v1.0.11.zip` (prints "manifest.json is at
+   → `dist/react-router-inspector-store-v1.0.12.zip` (prints "manifest.json is at
    the zip root — store-ready" and a SHA-256).
 3. **Open the dashboard.** `chrome.google.com/webstore/devconsole` → your
    publisher → **React Router Inspector** (`mejdpbjabihgbdgppfpcelmgpncknakj`).
 4. **Package tab → Upload new package** → select the zip from step 2. Wait for the
-   version to register as 1.0.11.
+   version to register as 1.0.12.
 5. **Store listing tab:**
    - Replace the **Description** with the block in §1.
    - Confirm the **Summary** (§1) and category (Developer Tools).
@@ -312,5 +313,5 @@ The item is already live at 1.0.8; this ships 1.0.11.
 7. **"What's new" / release notes:** paste the note from §1a.
 8. **Save draft → Submit for review.** Users on 1.0.8 auto-update once it's
    approved.
-9. **GitWorld release** (source of truth) is already cut: `v1.0.11` at
+9. **GitWorld release** (source of truth) is already cut: `v1.0.12` at
    `gitworld.lasiako.com/kennard/fmdsReactRouterInspector/releases`.
