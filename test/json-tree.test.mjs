@@ -25,7 +25,13 @@ function mkEl() {
   return el;
 }
 const copied = [];
-globalThis.navigator = { clipboard: { writeText: async (t) => { copied.push(t); } } };
+// Node 24 makes globalThis.navigator a read-only getter, so plain assignment
+// throws — define the property instead to stub the clipboard.
+Object.defineProperty(globalThis, "navigator", {
+  value: { clipboard: { writeText: async (t) => { copied.push(t); } } },
+  configurable: true,
+  writable: true,
+});
 globalThis.window = {};
 globalThis.document = { createElement: () => mkEl(), createTextNode: (t) => ({ textContent: t, kids: [] }) };
 

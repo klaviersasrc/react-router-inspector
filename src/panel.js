@@ -470,7 +470,8 @@
     const errs = events.filter((ev) => ev.error).length;
     const navs = events.some((ev) => ev.nav);
     // Nothing to offer with 0/1 type, no errors, and no navigations — hide the bar.
-    if (present.length < 2 && !errs && !navs) { hiddenKinds.clear(); return; }
+    // But keep it when errorsOnly is on, so the (persisted) filter stays clearable.
+    if (present.length < 2 && !errs && !navs && !errorsOnly) { hiddenKinds.clear(); return; }
     const onKind = () => { saveSet("hiddenKinds", hiddenKinds); renderList(); };
     if (present.length >= 2) for (const k of present) { const c = chip(KIND_LABELS[k] || k, k, hiddenKinds, counts[k], onKind); c.classList.add("kchip", "k-" + k); bar.appendChild(c); }
     if (navs) {
@@ -482,7 +483,10 @@
       b.addEventListener("click", () => { groupNav = !groupNav; prefSet("groupNav", groupNav ? "1" : "0"); renderList(); });
       bar.appendChild(b);
     }
-    if (errs) {
+    // Render whenever there are errors OR the filter is on — otherwise a persisted
+    // errorsOnly with zero errors on the current page hides everything with no way
+    // to toggle it back off.
+    if (errs || errorsOnly) {
       // "Errors N" is an inverse toggle (on = show only failures), so it's styled .on rather than .off.
       const b = document.createElement("button");
       b.className = "chip errors" + (errorsOnly ? " on" : "");
